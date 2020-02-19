@@ -22,7 +22,6 @@ import           Data.Char.Extended
 import           Data.Foldable          (asum)
 import           Data.List              (foldl')
 import           Data.Maybe
-import           Data.Monoid
 import           Data.Sequence
   (ViewL(..), singleton, viewl, (<|), (|>))
 import qualified Data.Sequence.Extended as Seq

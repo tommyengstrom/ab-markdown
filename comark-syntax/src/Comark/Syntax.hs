@@ -23,14 +23,20 @@ module Comark.Syntax
     , Inline(..)
     , normalize
     , asText
-    ) where
+    )
+where
 
-import Control.DeepSeq (NFData)
-import Data.Data       (Data, Typeable)
-import Data.Monoid
-import Data.Sequence   (Seq, ViewL(..), viewl, (<|))
-import Data.String     (IsString(..))
-import GHC.Generics    (Generic)
+import           Control.DeepSeq                ( NFData )
+import           Data.Data                      ( Data
+                                                , Typeable
+                                                )
+import           Data.Sequence                  ( Seq
+                                                , ViewL(..)
+                                                , viewl
+                                                , (<|)
+                                                )
+import           Data.String                    ( IsString(..) )
+import           GHC.Generics                   ( Generic )
 
 -- | A Document
 newtype Doc t = Doc (Blocks t)
@@ -41,9 +47,11 @@ newtype Doc t = Doc (Blocks t)
 
 instance NFData t => NFData (Doc t)
 
+instance Semigroup (Doc t) where
+    (Doc bs1) <> (Doc bs2) = Doc (bs1 <> bs2)
+
 instance Monoid (Doc t) where
     mempty = Doc mempty
-    (Doc bs1) `mappend` (Doc bs2) = Doc (bs1 `mappend` bs2)
 
 type Blocks t = Seq (Block t)
 
@@ -148,33 +156,32 @@ data Inline t
     )
 
 instance IsString t => IsString (Inline t) where
-  fromString = Str . fromString
+    fromString = Str . fromString
 
 instance NFData t => NFData (Inline t)
 
 -- | Consolidate adjacent text nodes
 normalize :: Monoid t => Inlines t -> Inlines t
-normalize inlines =
-  case viewl inlines of
-    Str t       :< (viewl -> Str ts :< is) -> normalize (Str (t <> ts) <| is)
-    Image i u t :< is -> Image  (normalize i) u t  <| normalize is
-    Link i u t  :< is -> Link   (normalize i) u t  <| normalize is
-    Emph i      :< is -> Emph   (normalize i)      <| normalize is
-    Strong i    :< is -> Strong (normalize i)      <| normalize is
-    i           :< is -> i                         <| normalize is
-    EmptyL            -> mempty
+normalize inlines = case viewl inlines of
+    Str t :< (viewl -> Str ts :< is) -> normalize (Str (t <> ts) <| is)
+    Image i u t :< is -> Image (normalize i) u t <| normalize is
+    Link i u t :< is -> Link (normalize i) u t <| normalize is
+    Emph i :< is -> Emph (normalize i) <| normalize is
+    Strong i :< is -> Strong (normalize i) <| normalize is
+    i :< is -> i <| normalize is
+    EmptyL -> mempty
 
 
 -- | Extract textual content from an inline.
 --   Note that it extracts only the 'primary' content (the one that is shown in
 --   first place). For example it wouldn't extract an URL from the link.
 asText :: (Monoid a, IsString a) => Inline a -> a
-asText (Str t)        = t
-asText (Emph is)      = foldMap asText is
-asText (Strong is)    = foldMap asText is
-asText (Code t)       = t
-asText (Link is _ _)  = foldMap asText is
+asText (Str    t    ) = t
+asText (Emph   is   ) = foldMap asText is
+asText (Strong is   ) = foldMap asText is
+asText (Code   t    ) = t
+asText (Link  is _ _) = foldMap asText is
 asText (Image is _ _) = foldMap asText is
-asText (RawHtml t)    = t
+asText (RawHtml t   ) = t
 asText SoftBreak      = " "
 asText HardBreak      = "\n"

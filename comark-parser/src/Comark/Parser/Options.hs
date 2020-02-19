@@ -5,12 +5,13 @@ module Comark.Parser.Options
     , _poNormalize
     , _poLinkReferences
     , _poParseEmphasis
-    ) where
+    )
+where
 
-import Control.Applicative ((<|>))
-import Data.Monoid         (Endo(Endo, appEndo))
+import           Control.Applicative            ( (<|>) )
+import           Data.Monoid                    ( Endo(Endo, appEndo) )
 
-import Comark.Parser.Reference
+import           Comark.Parser.Reference
 
 data ParserOption
   = -- | Consolidate adjacent text nodes.
@@ -37,23 +38,20 @@ data ParserOptions = ParserOptions
     , _poLinkReferences :: LinkText -> Maybe (LinkDestination, Maybe LinkTitle)
     , _poParseEmphasis  :: Bool
     }
+instance Semigroup ParserOptions where
+    a <> b =
+        b { _poLinkReferences = \t -> _poLinkReferences b t <|> _poLinkReferences a t }
 
 instance Monoid ParserOptions where
-  mempty = ParserOptions
-    { _poNormalize      = False
-    , _poLinkReferences = const Nothing
-    , _poParseEmphasis  = True
-    }
-  mappend a b =
-    b { _poLinkReferences =
-           \t -> _poLinkReferences b t <|> _poLinkReferences a t
-      }
+    mempty = ParserOptions { _poNormalize      = False
+                           , _poLinkReferences = const Nothing
+                           , _poParseEmphasis  = True
+                           }
 
 parserOptions :: [ParserOption] -> ParserOptions
 parserOptions = ($ mempty) . appEndo . foldMap (Endo . optFn)
   where
     optFn :: ParserOption -> ParserOptions -> ParserOptions
-    optFn Normalize o = o
-      { _poNormalize = True }
-    optFn (LinkReferences f) o = o
-      { _poLinkReferences = \t -> f t <|> _poLinkReferences o t }
+    optFn Normalize o = o { _poNormalize = True }
+    optFn (LinkReferences f) o =
+        o { _poLinkReferences = \t -> f t <|> _poLinkReferences o t }

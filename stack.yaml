@@ -1,11 +1,10 @@
-resolver: lts-10.7
+resolver: lts-15.0
 packages:
     - ./comark
     - ./comark-syntax
     - ./comark-parser
     - ./comark-html
     - ./comark-testutils
-    - ./comark-examples
 extra-deps:
     - html5-entity-0.2.0.3
     - control-bool-0.2.1

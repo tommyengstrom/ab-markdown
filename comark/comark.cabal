@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.20.0.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7a5e9d269e867ca5222676d0a9e7f5536721172dde6f58779a1f47eb0fb9648a
+-- hash: 2e6cfe0070fdf7e7eeebde19d01aec26d855eb4c19e5728b2ca2e0c00f5c11d9
 
 name:                comark
 version:             0.1.0
@@ -15,7 +17,6 @@ maintainer:          co@zudov.me
 copyright:           (c) Konstantin Zudov, 2015, 2016, 2017
 category:            Text
 build-type:          Simple
-cabal-version:       >= 1.10
 
 library
   exposed-modules:

@@ -186,7 +186,6 @@ verbatimContainerStart lastLineIsText = asum
         void pIndentSpaces
         notFollowedBy pBlankline
         pure IndentedCode
-   , RawHtmlBlock <$> pHtmlBlockStart lastLineIsText
    , guard (not lastLineIsText) *> pNonIndentSpaces *> (Reference <$ scanReference)
    ]
 
@@ -363,9 +362,6 @@ processElts opts (C (Container ct cs) : rest) =
               (cbs, rest') = span (isIndentedCode <||> isBlankLine)
                                   (C (Container ct cs) : rest)
 
-    RawHtmlBlock _ -> HtmlBlock txt <| processElts opts rest
-        where txt = Text.unlines (map extractText (toList cs))
-
     -- References have already been taken into account in the reference map,
     -- so we just skip.
     Reference -> processElts opts rest
@@ -402,12 +398,6 @@ processLine (lineNumber, txt) = do
   -- Process the rest of the line in a way that makes sense given
   -- the container type at the top of the stack (ct):
   case ct of
-    -- If it's a verbatim line container, add the line.
-    RawHtmlBlock c
-      | numUnmatched == 0 -> do
-          addLeaf lineNumber (TextLine t')
-          when (isRight $ runParser (blockEnd c) t')
-            closeContainer
     IndentedCode
       | numUnmatched == 0 -> addLeaf lineNumber (TextLine t')
     FencedCode { codeFence = fence' }
@@ -475,13 +465,6 @@ processLine (lineNumber, txt) = do
                         -- we don't add a SetextHeading leaf unless lastLineIsText.
                       | otherwise -> error "setext header line without preceding text lines"
 
-              -- The end tag can occur on the same line as the start tag.
-              (RawHtmlBlock condition :< _, TextLine t)
-                | Right () <- runParser (blockEnd condition) t
-                -> do closeContainer
-                      addContainer (RawHtmlBlock condition)
-                      addLeaf lineNumber (TextLine t)
-                      closeContainer
               -- otherwise, close all the unmatched containers, add the new
               -- containers, and finally add the new leaf:
               (ns, lf) -> do -- close unmatched containers, add new ones
@@ -627,21 +610,6 @@ parseCodeFence = do
     , codeFence = cs
     , codeInfo  = rawattr
     }
-
-pHtmlBlockStart :: Bool -> Parser Condition
-pHtmlBlockStart lastLineIsText = lookAhead $ do
-  discardOpt pNonIndentSpaces
-  asum starters
-  where
-    starters =
-      [ condition1 <$ blockStart condition1
-      , condition2 <$ blockStart condition2
-      , condition3 <$ blockStart condition3
-      , condition4 <$ blockStart condition4
-      , condition5 <$ blockStart condition5
-      , condition6 <$ blockStart condition6
-      , condition7 <$ if lastLineIsText then mzero else blockStart condition7
-      ]
 
 data Condition =
   Condition

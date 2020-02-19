@@ -1,12 +1,13 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Comark.TestUtils.Spec.TH
     ( specFile
-    ) where
+    )
+where
 
-import Paths_comark_testutils
+import           Paths_comark_testutils
 
-import Data.FileEmbed
-import Language.Haskell.TH
+import           Data.FileEmbed
+import           Language.Haskell.TH
 
 specFile :: Q Exp
 specFile = do

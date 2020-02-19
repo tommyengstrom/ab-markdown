@@ -63,8 +63,6 @@ data Block t
   | Heading HeadingLevel (Inlines t)
   -- | Block of code: info string, literal content
   | CodeBlock (Maybe t) t
-  -- | Raw HTML Block
-  | HtmlBlock t
   -- | Paragraph (a grouped sequence of inlines)
   | Para (Inlines t)
   -- | Block Quote (a quoted sequence of blocks)
@@ -72,10 +70,7 @@ data Block t
   -- | List: Type of the list, tightness, a sequnce of blocks (list item)
   | List ListType Bool (Seq (Blocks t))
   deriving
-    ( Show, Read, Eq, Ord
-    , Typeable, Data, Generic
-    , Functor, Foldable, Traversable
-    )
+    ( Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable)
 
 instance (NFData t) => NFData (Block t)
 

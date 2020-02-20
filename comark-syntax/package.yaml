@@ -14,6 +14,7 @@ dependencies:
 - base >=4.7 && <5.0
 - containers
 - deepseq
+- text
 library:
   source-dirs: src/
   ghc-options: -Wall -Werror

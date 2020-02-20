@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveFoldable     #-}
 {-# LANGUAGE DeriveFunctor      #-}
+{-# LANGUAGE DeriveAnyClass      #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE DeriveTraversable  #-}
 {-# LANGUAGE FlexibleInstances  #-}
@@ -21,6 +22,7 @@ module Comark.Syntax
     -- * Inline Elements
     , Inlines
     , Inline(..)
+    , Language(..)
     , normalize
     , asText
     )
@@ -37,7 +39,7 @@ import           Data.Sequence                  ( Seq
                                                 )
 import           Data.String                    ( IsString(..) )
 import           GHC.Generics                   ( Generic )
-
+import           Data.Text                      ( Text )
 -- | A Document
 newtype Doc t = Doc (Blocks t)
   deriving ( Show, Read, Eq
@@ -62,7 +64,7 @@ data Block t
   -- ^ Heading: level, sequnce of inlines that define content
   | Heading HeadingLevel (Inlines t)
   -- ^ Block of code: info string, literal content
-  | CodeBlock (Maybe t) t
+  | CodeBlock (Maybe Language) t
   -- ^ Paragraph (a grouped sequence of inlines)
   | Paragraph (Inlines t)
   -- ^ Block Quote (a quoted sequence of blocks)
@@ -70,9 +72,14 @@ data Block t
   | Quote (Blocks t)
   -- ^ List: Type of the list, tightness, a sequnce of blocks (list item)
   | List ListType Bool (Seq (Blocks t))
-  deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable)
+  deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable
+           , NFData)
 
-instance (NFData t) => NFData (Block t)
+
+data Language
+    = Unknown Text
+    | Haskell
+    deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
 
 data HeadingLevel
   = Heading1
@@ -82,36 +89,27 @@ data HeadingLevel
   | Heading5
   | Heading6
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic)
-
-instance NFData HeadingLevel
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
 
 data ListType
   = Ordered Delimiter Int
   | Bullet BulletMarker
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
 
-instance NFData ListType
 
 data Delimiter
   = Period
   | Paren
   deriving
-    ( Show, Read, Eq, Ord
-    , Typeable, Data, Generic
-    )
-
-instance NFData Delimiter
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
 
 data BulletMarker
   = Minus    -- ^ @-@
   | Plus     -- ^ @+@
   | Asterisk -- ^ @*@
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic)
-
-instance NFData BulletMarker
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
 
 type Inlines t = Seq (Inline t)
 
@@ -138,12 +136,11 @@ data Inline t
   --   as @<br />@
   | HardBreak
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable, NFData)
 
 instance IsString t => IsString (Inline t) where
     fromString = Str . fromString
 
-instance NFData t => NFData (Inline t)
 
 -- | Consolidate adjacent text nodes
 normalize :: Monoid t => Inlines t -> Inlines t

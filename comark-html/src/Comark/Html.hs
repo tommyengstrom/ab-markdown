@@ -1,5 +1,6 @@
 {-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections     #-}
 module Comark.Html
     ( render
@@ -109,7 +110,10 @@ renderBlock (Heading n is) = tag hx (renderInlines is)
 renderBlock (CodeBlock mInfo t) = tag "pre" $ tagWith args "code" $ escapedText t
   where
     args = ("class", ) . lang <$> maybeToList mInfo
-    lang a = "language-" <> Text.takeWhile (/= ' ') a
+    lang = \case
+        Haskell   -> "language-haskell"
+        Unknown s -> "language-" <> Text.takeWhile (/= ' ') s
+
 renderBlock ThematicBreak         = voidTag "hr"
 renderBlock (Quote bs           ) = tag "blockquote" $ renderBlocks bs
 renderBlock (Question bs Nothing) = tag "QUESTION-BLOCK" $ renderBlocks bs

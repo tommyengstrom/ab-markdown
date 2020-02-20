@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 71a7fb6980e3ca9f1669e2f068fdf9dd21dd99269bdc42c8ff7c6a0c9f811f49
+-- hash: 5e4fdce609f30dd1444bb8ce082fd1a8eff660816a356ed4ab40c81aa1234787
 
 name:           comark-syntax
 version:        0.1.0
@@ -27,6 +27,7 @@ library
       base >=4.7 && <5.0
     , containers
     , deepseq
+    , text
   exposed-modules:
       Comark.Syntax
       Comark.Syntax.Builder

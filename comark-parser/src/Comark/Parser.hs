@@ -355,7 +355,7 @@ processElts opts (C (Container ct cs) : rest) =
           tightListItem [_]    = True
           tightListItem (_:is) = not $ any isBlankLine $ init is
 
-    FencedCode _ _ info -> CodeBlock (parseInfoString <$> info)
+    FencedCode _ _ info -> CodeBlock (parseLanguage <$> info)
                                      (Text.unlines $ map extractText $ toList cs)
                                 <| processElts opts rest
 

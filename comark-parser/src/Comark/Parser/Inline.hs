@@ -9,7 +9,7 @@
 module Comark.Parser.Inline
   ( parseInlines
   , pReference
-  , parseInfoString
+  , parseLanguage
   ) where
 
 import Prelude hiding (takeWhile)
@@ -72,11 +72,13 @@ pInline opts =
     , pFallback
     ]
 
-parseInfoString :: Text -> Text
-parseInfoString t =
+parseLanguage :: Text -> Language
+parseLanguage t =
   case runParser (msum <$> many parser <* endOfInput) t of
-    Left _   -> t
-    Right is -> foldMap asText is
+    Left _   -> Unknown t
+    Right is -> case Text.toLower $ foldMap asText is of
+        "haskell" -> Haskell
+        s -> Unknown s
   where
     parser = pText <|> pBackslashed <|> pEntity
 

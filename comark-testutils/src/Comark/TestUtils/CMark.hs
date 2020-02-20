@@ -28,7 +28,7 @@ nodeToBlock (Node _ THEMATIC_BREAK _ ) = error "THEMATIC_BREAK node has children
 nodeToBlock (Node _ PARAGRAPH      ns) = Paragraph $ Seq.fromList $ map nodeToInline ns
 nodeToBlock (Node _ BLOCK_QUOTE    ns) = Quote $ Seq.fromList $ map nodeToBlock ns
 nodeToBlock (Node _ (CODE_BLOCK i c) []) =
-    CodeBlock (mfilter (not . Text.null) $ pure i) c
+    CodeBlock (fmap Unknown . mfilter (not . Text.null) $ pure i) c
 nodeToBlock (Node _ CODE_BLOCK{} _ ) = error "CODE_BLOCK has children"
 nodeToBlock (Node _ (HEADING l)  ns) = Heading h $ Seq.fromList $ map nodeToInline ns
   where

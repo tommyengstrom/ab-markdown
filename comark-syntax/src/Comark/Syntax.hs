@@ -64,13 +64,13 @@ data Block t
   -- ^ Block of code: info string, literal content
   | CodeBlock (Maybe t) t
   -- ^ Paragraph (a grouped sequence of inlines)
-  | Para (Inlines t)
+  | Paragraph (Inlines t)
   -- ^ Block Quote (a quoted sequence of blocks)
+  | Question (Blocks t) (Maybe (Blocks t))
   | Quote (Blocks t)
   -- ^ List: Type of the list, tightness, a sequnce of blocks (list item)
   | List ListType Bool (Seq (Blocks t))
-  deriving
-    ( Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable)
+  deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable)
 
 instance (NFData t) => NFData (Block t)
 
@@ -82,9 +82,7 @@ data HeadingLevel
   | Heading5
   | Heading6
   deriving
-    ( Show, Read, Eq, Ord
-    , Typeable, Data, Generic
-    )
+    (Show, Read, Eq, Ord, Typeable, Data, Generic)
 
 instance NFData HeadingLevel
 
@@ -92,9 +90,7 @@ data ListType
   = Ordered Delimiter Int
   | Bullet BulletMarker
   deriving
-    ( Show, Read, Eq, Ord
-    , Typeable, Data, Generic
-    )
+    (Show, Read, Eq, Ord, Typeable, Data, Generic)
 
 instance NFData ListType
 
@@ -113,9 +109,7 @@ data BulletMarker
   | Plus     -- ^ @+@
   | Asterisk -- ^ @*@
   deriving
-    ( Show, Read, Eq, Ord
-    , Typeable, Data, Generic
-    )
+    (Show, Read, Eq, Ord, Typeable, Data, Generic)
 
 instance NFData BulletMarker
 
@@ -144,10 +138,7 @@ data Inline t
   --   as @<br />@
   | HardBreak
   deriving
-    ( Show, Read, Eq, Ord
-    , Typeable, Data, Generic
-    , Functor, Foldable, Traversable
-    )
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable)
 
 instance IsString t => IsString (Inline t) where
     fromString = Str . fromString

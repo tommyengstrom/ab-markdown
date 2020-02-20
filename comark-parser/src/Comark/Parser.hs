@@ -103,6 +103,8 @@ data Container =
 data ContainerType
   = Document
   | BlockQuote
+  | QuestionBlock
+  | AnswerBlock -- Can only appear after questions
   | ListItem
       { liPadding :: Int
       , liType    :: ListType
@@ -153,6 +155,8 @@ type ReferenceMap = Map LinkLabel (LinkDestination, Maybe LinkTitle)
 containerContinue :: Container -> Scanner
 containerContinue c = case containerType c of
     BlockQuote     -> pNonIndentSpaces *> scanBlockquoteStart
+    QuestionBlock  -> pNonIndentSpaces *> scanQuestionStart
+    AnswerBlock    -> pNonIndentSpaces *> scanAnswerStart
     IndentedCode   -> void pIndentSpaces
     FencedCode{..} -> void $ pSpacesUpToColumn codeStartColumn
     ListItem{..}   -> void pBlankline <|> (tabCrusher *> replicateM_ liPadding (char ' '))
@@ -171,6 +175,12 @@ containerStart afterListItem lastLineIsText = asum
     [ pNonIndentSpaces
       *> scanBlockquoteStart
       *> pure BlockQuote
+    , pNonIndentSpaces
+      *> scanQuestionStart
+      *> pure QuestionBlock
+    , pNonIndentSpaces
+      *> scanAnswerStart
+      *> pure AnswerBlock
     , parseListMarker afterListItem lastLineIsText
     ]
 
@@ -276,12 +286,11 @@ processDocument _ = error "top level container is not Document"
 -- parsing inline contents of texts and resolving referencess.
 processElts :: ParserOptions -> [Elt] -> Blocks Text
 processElts _ [] = mempty
-
 processElts opts (L _lineNumber lf : rest) =
   case lf of
-    -- Gobble text lines and make them into a Para:
+    -- Gobble text lines and make them into a Paragraph:
     TextLine t ->
-      singleton (Para $ parseInlines opts txt) <> processElts opts rest'
+      singleton (Paragraph $ parseInlines opts txt) <> processElts opts rest'
         where txt = Text.stripEnd $ Text.joinLines $ map Text.stripStart
                                $ t : map extractText textlines
               (textlines, rest') = span isTextLine rest
@@ -300,8 +309,16 @@ processElts opts (L _lineNumber lf : rest) =
 processElts opts (C (Container ct cs) : rest) =
   case ct of
     Document -> error "Document container found inside Document"
-
     BlockQuote -> Quote (processElts opts (toList cs)) <| processElts opts rest
+    AnswerBlock -> Quote (processElts opts (toList cs)) <| processElts opts rest
+        -- This is just a hack, because answers are not allowed by themselfs.
+    QuestionBlock -> case dropWhile isBlankLine rest of
+        (C (Container AnswerBlock cs')): rest' ->
+            Question (processElts opts (toList cs))
+                     (Just $ processElts opts (toList cs'))
+                <| processElts opts rest'
+        _  -> Question (processElts opts (toList cs)) Nothing <| processElts opts rest
+
 
     -- List item?  Gobble up following list items of the same type
     -- (skipping blank lines), determine whether the list is tight or
@@ -538,6 +555,11 @@ scanReference = void $ lookAhead (char '[')
 scanBlockquoteStart :: Scanner
 scanBlockquoteStart = char '>' *> tabCrusher *> discardOpt (char ' ')
 
+scanQuestionStart :: Scanner
+scanQuestionStart = char '?' *> char '?' *> tabCrusher *> discardOpt (char ' ')
+
+scanAnswerStart :: Scanner
+scanAnswerStart = char '?' *> char '=' *> tabCrusher *> discardOpt (char ' ')
 -- Parse the sequence of `#` characters that begins an ATX
 -- header, and return the number of characters.  We require
 -- a space after the initial string of `#`s, as not all markdown

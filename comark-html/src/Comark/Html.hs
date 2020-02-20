@@ -96,7 +96,7 @@ renderBlocks :: Blocks Text -> HtmlBuilder
 renderBlocks bs = nl *> mapM_ (\b -> nl *> renderBlock b *> nl) bs
 
 renderBlock :: Block Text -> HtmlBuilder
-renderBlock (Para is     ) = tag "p" (renderInlines is)
+renderBlock (Paragraph is) = tag "p" (renderInlines is)
 renderBlock (Heading n is) = tag hx (renderInlines is)
   where
     hx = case n of
@@ -110,8 +110,11 @@ renderBlock (CodeBlock mInfo t) = tag "pre" $ tagWith args "code" $ escapedText 
   where
     args = ("class", ) . lang <$> maybeToList mInfo
     lang a = "language-" <> Text.takeWhile (/= ' ') a
-renderBlock ThematicBreak               = voidTag "hr"
-renderBlock (Quote bs                 ) = tag "blockquote" $ renderBlocks bs
+renderBlock ThematicBreak         = voidTag "hr"
+renderBlock (Quote bs           ) = tag "blockquote" $ renderBlocks bs
+renderBlock (Question bs Nothing) = tag "QUESTION-BLOCK" $ renderBlocks bs
+renderBlock (Question bs (Just aBs)) =
+    (tag "QUESTION-BLOCK" $ renderBlocks bs) *> (tag "ANSWER" $ renderBlocks aBs)
 renderBlock (List listType tight items) = case listType of
     Bullet _    -> tag "ul" renderedItems
     Ordered _ 1 -> tag "ol" renderedItems
@@ -123,8 +126,8 @@ renderBlock (List listType tight items) = case listType of
         | tight     = tag "li" (mapM_ renderTightBlock bs)
         | otherwise = tag "li" (when (null bs) disallowNL *> renderBlocks bs)
 
-    renderTightBlock (Para zs) = mapM_ renderInline zs
-    renderTightBlock x         = nl *> renderBlock x *> nl
+    renderTightBlock (Paragraph zs) = mapM_ renderInline zs
+    renderTightBlock x              = nl *> renderBlock x *> nl
 
 renderInlines :: Inlines Text -> HtmlBuilder
 renderInlines = mapM_ renderInline

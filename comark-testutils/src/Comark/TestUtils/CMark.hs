@@ -25,7 +25,7 @@ nodeToDoc _                    = error "Top-level node must be DOCUMENT"
 nodeToBlock :: Node -> Block Text
 nodeToBlock (Node _ THEMATIC_BREAK []) = ThematicBreak
 nodeToBlock (Node _ THEMATIC_BREAK _ ) = error "THEMATIC_BREAK node has children"
-nodeToBlock (Node _ PARAGRAPH      ns) = Para $ Seq.fromList $ map nodeToInline ns
+nodeToBlock (Node _ PARAGRAPH      ns) = Paragraph $ Seq.fromList $ map nodeToInline ns
 nodeToBlock (Node _ BLOCK_QUOTE    ns) = Quote $ Seq.fromList $ map nodeToBlock ns
 nodeToBlock (Node _ (CODE_BLOCK i c) []) =
     CodeBlock (mfilter (not . Text.null) $ pure i) c

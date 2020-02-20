@@ -1,12 +1,17 @@
-# haskell-comark
+# Awebitious markdown
 
-[![Build Status](https://travis-ci.org/zudov/haskell-comark.svg?branch=master)](https://travis-ci.org/zudov/haskell-comark)
+Based on commonmark but with HTML support removed. In addition we support question tags such as:
 
-[![comark on Hackage](https://img.shields.io/hackage/v/comark.svg)](http://hackage.haskell.org/package/comark)
+```
+?? What contry has he most forrest?
 
-[![comark on Stackage LTS 2](http://stackage.org/package/comark/badge/lts-2)](http://stackage.org/lts-2/package/comark)
-[![comark on Stackage LTS 3](http://stackage.org/package/comark/badge/lts-3)](http://stackage.org/lts-3/package/comark)
-[![comark on Stackage Nightly](http://stackage.org/package/comark/badge/nightly)](http://stackage.org/nightly/package/comark)
+?? Which nation has been nuked the most?
+?= Japan
+```
+
+The library is based on https://github.com/zudov/haskell-comark
+
+# Old readme
 
 The functionality is split across several libraries which are contained in this
 repo:

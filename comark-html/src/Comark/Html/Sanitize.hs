@@ -12,16 +12,6 @@ import           Comark.Syntax
 removeHtml :: Doc Text -> Doc Text
 removeHtml = removeUnsafeLinks
 
-removeRawHtml :: Doc Text -> Doc Text
-removeRawHtml = Generics.everywhere (Generics.mkT filterInlines)
-  where
-    filterInlines :: Inlines Text -> Inlines Text
-    filterInlines = Seq.filter isRawHtml
-
-    isRawHtml     = \case
-        RawHtml _ -> True
-        _         -> False
-
 
 removeUnsafeLinks :: Doc Text -> Doc Text
 removeUnsafeLinks = Generics.everywhere (Generics.mkT withInline)
@@ -39,5 +29,4 @@ isUnsafeDestination t = safeDataProtocol || not unsafeProtocol
     safeDataProtocol = and $ map
         (`Text.isPrefixOf` Text.toLower t)
         ["data:image/png", "data:image/jpeg", "data:image/webp", "data:image/gif"]
-
 

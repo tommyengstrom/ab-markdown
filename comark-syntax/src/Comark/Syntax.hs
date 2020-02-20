@@ -57,17 +57,17 @@ type Blocks t = Seq (Block t)
 
 -- | Block elements
 data Block t
-  -- | Thematic break
+  -- ^ Thematic break
   = ThematicBreak
-  -- | Heading: level, sequnce of inlines that define content
+  -- ^ Heading: level, sequnce of inlines that define content
   | Heading HeadingLevel (Inlines t)
-  -- | Block of code: info string, literal content
+  -- ^ Block of code: info string, literal content
   | CodeBlock (Maybe t) t
-  -- | Paragraph (a grouped sequence of inlines)
+  -- ^ Paragraph (a grouped sequence of inlines)
   | Para (Inlines t)
-  -- | Block Quote (a quoted sequence of blocks)
+  -- ^ Block Quote (a quoted sequence of blocks)
   | Quote (Blocks t)
-  -- | List: Type of the list, tightness, a sequnce of blocks (list item)
+  -- ^ List: Type of the list, tightness, a sequnce of blocks (list item)
   | List ListType Bool (Seq (Blocks t))
   deriving
     ( Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable)
@@ -123,24 +123,23 @@ type Inlines t = Seq (Inline t)
 
 -- | Inline elements
 data Inline t
-  -- | Text (string)
+  -- ^ Text (string)
   = Str t
-  -- | Inline code
+  -- ^ Inline code
   | Code t
-  -- | Emphasized text (a sequence of inlines)
+  -- ^ Emphasized text (a sequence of inlines)
   | Emph (Inlines t)
-  -- | Strongly emphasized text (a sequence of inlines)
+  -- ^ Strongly emphasized text (a sequence of inlines)
   | Strong (Inlines t)
-  -- | Hyperlink: visible link text (sequence of inlines), destination, title
+  -- ^ Hyperlink: visible link text (sequence of inlines), destination, title
   | Link (Inlines t) t (Maybe t) -- TODO: special types
-  -- | Image hyperlink: image description, destination, title
+  -- ^ Image hyperlink: image description, destination, title
   | Image (Inlines t) t (Maybe t) -- TODO: special types
-  -- | Inline Raw HTML tag
-  | RawHtml t
-  -- | A regular linebreak. A conforming renderer may render a soft
+  -- ^ Inline Raw HTML tag
+  -- ^ A regular linebreak. A conforming renderer may render a soft
   --   line break in HTML either as line break or as a space.
   | SoftBreak
-  -- | A line break that is marked as hard (either with spaces or
+  -- ^ A line break that is marked as hard (either with spaces or
   --   backslash, see the spec for details). In html it would be rendered
   --   as @<br />@
   | HardBreak
@@ -177,6 +176,5 @@ asText (Strong is   ) = foldMap asText is
 asText (Code   t    ) = t
 asText (Link  is _ _) = foldMap asText is
 asText (Image is _ _) = foldMap asText is
-asText (RawHtml t   ) = t
 asText SoftBreak      = " "
 asText HardBreak      = "\n"

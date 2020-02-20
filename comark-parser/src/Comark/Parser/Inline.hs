@@ -67,7 +67,6 @@ pInline opts =
     , guard (_poParseEmphasis opts) *> pEmphLink opts
     , pBackslashed
     , pAutolink
-    , pHtml
     , pCode
     , pEntity
     , pFallback
@@ -141,55 +140,6 @@ pCode = singleton <$> do
     spaceChunk         =  " " <$ takeWhile1 isCollapsableSpace
     isCollapsableSpace = (== ' ') <||> isLineEnding
 
--- [ Raw Html ] ----------------------------------------------------------------
-pHtml :: Parser (Inlines Text)
-pHtml = singleton . RawHtml <$> consumedBy (asum scanners)
-  where
-    scanners =
-      [ void tag, void comment, void instruction, void declaration, void cdata ]
-    instruction = "<?" *> manyTill anyChar "?>"
-    cdata = "<![CDATA[" *> manyTill anyChar "]]>"
-    declaration = do
-      "<!" *> skipWhile1 isAsciiUpper
-      pWhitespace
-      skipWhile (/= '>') <* char '>'
-    comment = do
-      "<!--" *> notFollowedBy (">" <|> "->")
-      comm <- Text.pack <$> manyTill anyChar "-->"
-      guard $ not $ or
-        [ Text.head comm == '>'
-        , "->" `Text.isPrefixOf` comm
-        , Text.last comm == '-'
-        , "--" `Text.isInfixOf` comm
-        ]
-    tag = openTag <|> closeTag
-      where
-        openTag = do
-          "<" *> tagName
-          many attr <* optional pWhitespace
-          optional "/" *> ">"
-          where
-            attr = do
-              pWhitespace *> attrName
-              optional attrValueSpec
-              where
-                attrName = do
-                  satisfy ((isAscii <&&> isLetter) <||> inClass "_:")
-                  skipWhile ((isAscii <&&> (isLetter <||> isDigit)) <||> inClass "_:.-")
-                attrValueSpec = do
-                  optional pWhitespace *> char '='
-                  optional pWhitespace *> attrValue
-                attrValue =
-                  unquoted <|> singleQuoted <|> doubleQuoted
-                  where
-                    unquoted     = skipWhile1 (notInClass " \"'=<>`")
-                    singleQuoted = char '\'' *> skipWhile (/= '\'') <* char '\''
-                    doubleQuoted = char '"'  *> skipWhile (/= '"')  <* char '"'
-        closeTag =
-          "</" *> tagName *> optional pWhitespace *> ">"
-        tagName = do
-          satisfy (isAscii <&&> isLetter)
-          skipWhile ((== '-') <||> (isAscii <&&> (isLetter <||> isDigit)))
 
 -- [ Entities ] ----------------------------------------------------------------
 

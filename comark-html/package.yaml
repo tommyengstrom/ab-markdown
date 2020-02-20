@@ -12,9 +12,7 @@ library:
   other-extensions:
   - DeriveDataTypeable
   - DeriveGeneric
-  ghc-options:
-  - -Wall
-  - -O2
+  ghc-options: -Wall -Werror -O2
   exposed-modules:
   - Comark.Html
   dependencies:
@@ -37,6 +35,7 @@ executables:
       then:
         ghc-options:
           - -Wall
+          - -Werror
           - -O2
           - -threaded
           - -fprof-auto
@@ -55,7 +54,7 @@ tests:
   test:
     main: Main.hs
     source-dirs: tests/
-    ghc-options: -Wall
+    ghc-options: -Wall -Werror
     dependencies:
     - base >=4.7 && <5
     - comark-html

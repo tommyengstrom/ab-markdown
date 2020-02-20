@@ -15,7 +15,6 @@ import           Unsafe.Coerce
 
 import           Data.Maybe
 import           Data.Text                      ( Text )
-import qualified Data.Text                                    as Text
 
 testBlock :: Spec
 testBlock = do

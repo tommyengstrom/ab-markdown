@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8d1f0f62081d5f5f7acac157d6f6a3575a4277a6d832f1a3cfcf31d399e26b1b
+-- hash: 1a88de787bd3b30c27875df5cdf8732015ef2dd8a1b3ffdf0b5497b129f5c025
 
 name:                comark-parser
 version:             0.1.0
@@ -47,7 +47,7 @@ library
     , text
     , transformers
   default-language: Haskell2010
-  ghc-options: -Wall
+  ghc-options: -Wall -Werror
 
 test-suite test
   hs-source-dirs:
@@ -58,7 +58,7 @@ test-suite test
       Inline
       Paths_comark_parser
   type: exitcode-stdio-1.0
-  ghc-options: -Wall
+  ghc-options: -Wall -Werror
   build-depends:
       QuickCheck
     , base >=4.7

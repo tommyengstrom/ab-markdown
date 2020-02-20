@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 049ebcb34d7c3b75210b315e808f9654019214ce03cdb02c0b92d12442ab21b7
+-- hash: 71a7fb6980e3ca9f1669e2f068fdf9dd21dd99269bdc42c8ff7c6a0c9f811f49
 
 name:           comark-syntax
 version:        0.1.0
@@ -22,7 +22,7 @@ library
   hs-source-dirs:
       src/
   other-extensions: DeriveDataTypeable DeriveGeneric
-  ghc-options: -Wall
+  ghc-options: -Wall -Werror
   build-depends:
       base >=4.7 && <5.0
     , containers

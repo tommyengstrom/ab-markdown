@@ -22,7 +22,7 @@ library:
   - OverloadedStrings
   - LambdaCase
   - RecordWildCards
-  ghc-options: -Wall
+  ghc-options: -Wall -Werror
   exposed-modules:
   - Comark.Parser
   - Comark.Parser.Options
@@ -40,7 +40,7 @@ tests:
   test:
     main: Main.hs
     source-dirs: tests/
-    ghc-options: -Wall
+    ghc-options: -Wall -Werror
     dependencies:
     - base >=4.7
     - hspec

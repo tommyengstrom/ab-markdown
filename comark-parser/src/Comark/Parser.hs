@@ -18,7 +18,6 @@ import           Control.Arrow                  (second)
 import           Control.Bool
 import           Control.Monad
 import           Control.Monad.Trans.RWS.Strict
-import           Data.Char
 import           Data.Either
 import           Data.Foldable
 import           Data.List                      (intercalate)
@@ -28,7 +27,6 @@ import           Data.Maybe                     (mapMaybe)
 import           Data.Sequence
   (Seq, ViewL(..), ViewR(..), singleton, viewl, viewr, (<|), (|>))
 import qualified Data.Sequence                  as Seq
-import qualified Data.Set                       as Set
 import           Data.Text.Extended             (Text)
 import qualified Data.Text.Extended             as Text
 
@@ -115,7 +113,6 @@ data ContainerType
       , codeInfo        :: Maybe Text
       }
   | IndentedCode
-  | RawHtmlBlock Condition
   | Reference
   deriving (Show, Eq)
 
@@ -610,95 +607,6 @@ parseCodeFence = do
     , codeFence = cs
     , codeInfo  = rawattr
     }
-
-data Condition =
-  Condition
-    { blockStart :: Parser ()
-    , blockEnd   :: Parser ()
-    }
-
-instance Show Condition where
-  show _ = "Condition{}"
-
-instance Eq Condition where
-  _ == _ = False
-
-lineContains :: Foldable t => t Text -> Parser ()
-lineContains terms = do
-  line <- Text.toCaseFold <$> takeTill isLineEnding
-  guard $ any (`Text.isInfixOf` line) terms
-
-condition1, condition2, condition3, condition4, condition5, condition6, condition7 :: Condition
-condition1 = Condition
-  { blockStart = do
-      _ <- asum $ map stringCaseless ["<script", "<pre", "<style"]
-      void pWhitespace <|> void ">" <|> void pLineEnding <|> endOfInput
-  , blockEnd = lineContains ["</script>", "</pre>", "</style>"]
-  }
-
-condition2 = Condition
-  { blockStart = void "<!--"
-  , blockEnd = void $ lineContains ["-->"]
-  }
-
-condition3 = Condition
-  { blockStart = void "<?"
-  , blockEnd = void $ lineContains ["?>"]
-  }
-
-condition4 = Condition
-  { blockStart = void $ "<!" *> satisfy isAsciiUpper
-  , blockEnd = void $ lineContains [">"]
-  }
-
-condition5 = Condition
-  { blockStart = void $ "<![CDATA["
-  , blockEnd = void $ lineContains ["]]>"]
-  }
-
-condition6 = Condition
-  { blockStart = do
-      void $ "</" <|> "<"
-      tag <- takeTill (isWhitespace <||> (== '/') <||> (== '>'))
-      guard $ isBlockHtmlTag (Text.toLower tag)
-      void pWhitespace <|> void pLineEnding <|> void ">" <|> void "/>"
-  , blockEnd = void pBlankline
-  }
-
-condition7 = Condition
-  { blockStart = (openTag <|> closeTag) *> (void pWhitespace <|> endOfInput)
-  , blockEnd = void pBlankline
-  }
-  where
-    tagName = do
-      c <- satisfy (inClass "A-Za-z")
-      cs <- takeWhile ((== '-') <||> inClass "A-Za-z0-9")
-      guard (Text.cons c cs `notElem` ["script", "style", "pre"])
-    attr = pWhitespace *> attrName *> optional attrValueSpec
-    attrName = satisfy (inClass "_:A-Za-z") *> skipWhile (inClass "A-Za-z0-9_.:-")
-    attrValueSpec = optional pWhitespace *> char '=' *>
-                    optional pWhitespace *> attrValue
-    attrValue = void unquoted <|> void singleQuoted <|> void doubleQuoted
-    unquoted = skipWhile1 (notInClass " \"'=<>`")
-    singleQuoted = "'" *> skipWhile (/= '\'') *> "'"
-    doubleQuoted = "\"" *> skipWhile (/= '"') *> "\""
-    openTag = "<" *> tagName *> many attr *> optional pWhitespace
-                                          *> optional "/" *> ">"
-    closeTag = "</" *> tagName *> optional pWhitespace *> ">"
-
--- List of block level tags for HTML 5.
-isBlockHtmlTag :: Text -> Bool
-isBlockHtmlTag name = Text.toLower name `Set.member` Set.fromList
-  [ "address", "article", "aside", "base", "basefont", "blockquote"
-  , "body", "caption", "center", "col", "colgroup", "dd", "details"
-  , "dialog", "dir", "div", "dl", "dt", "fieldset", "figcaption"
-  , "figure", "footer", "form", "frame", "frameset"
-  , "h1", "h2", "h3", "h4", "h5", "h6", "head", "header"
-  , "hr", "html", "iframe", "legend", "li", "link", "main"
-  , "menu", "menuitem", "meta", "nav", "noframes", "ol", "optgroup"
-  , "option", "p", "param", "section", "source", "summary", "table"
-  , "tbody", "td", "tfoot", "th", "thead", "title", "tr", "track", "ul"
-  ]
 
 -- Parse a list marker and return the list type.
 --

@@ -1,17 +1,14 @@
 module Main where
 
-import Blocks
-import Inline
-import Test.Hspec
-import Test.Hspec.QuickCheck
-import Test.QuickCheck
+import           Blocks
+import           Inline
+import           Test.Hspec
+import           Test.Hspec.QuickCheck
 
-import Control.DeepSeq
-import Data.Text       (pack)
+import           Control.DeepSeq
+import           Data.Text                      ( pack )
 
-import Comark.Parser
-import Comark.Parser.Options
-import Comark.Syntax
+import           Comark.Parser
 
 main :: IO ()
 main = do
@@ -21,4 +18,4 @@ main = do
 
         describe "Properties" $ do
             prop "Any sequence of characters is a valid input"
-              (\t -> parse [] (pack t) `deepseq` True)
+                 (\t -> parse [] (pack t) `deepseq` True)

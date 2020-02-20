@@ -1,32 +1,31 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TupleSections     #-}
 module Comark.Parser.Util
-  ( Scanner ()
-  , isLineEnding
-  , pLineEnding
-  , isWhitespace
-  , pWhitespace
-  , pSpaces
-  , pSpacesUpToColumn
-  , pIndentSpaces
-  , pNonIndentSpaces
-  , pBlankline
-  , isUnicodeWhitespace
-  , isAsciiPunctuation
-  , satisfyUpTo
-  , parenthesize
-  ) where
+    ( Scanner()
+    , isLineEnding
+    , pLineEnding
+    , isWhitespace
+    , pWhitespace
+    , pSpaces
+    , pSpacesUpToColumn
+    , pIndentSpaces
+    , pNonIndentSpaces
+    , pBlankline
+    , isUnicodeWhitespace
+    , isAsciiPunctuation
+    , satisfyUpTo
+    , parenthesize
+    )
+where
 
 import           Control.Applicative
 import           Control.Bool
 import           Control.Monad
 import           Data.Char
 import           Data.Monoid
-import           Data.Text           (Text)
-import qualified Data.Text.Extended  as Text
-import           Prelude             hiding (takeWhile)
+import           Data.Text                      ( Text )
+import qualified Data.Text.Extended                           as Text
+import           Prelude                 hiding ( takeWhile )
 
-import Comark.ParserCombinators
+import           Comark.ParserCombinators
 
 type Scanner = Parser ()
 
@@ -55,21 +54,16 @@ pSpaces = takeWhile (== ' ')
 
 pSpacesUpToColumn :: Int -> Parser Text
 pSpacesUpToColumn col = do
-  currentCol <- column <$> getPosition
-  let distance = col - currentCol
-  if distance >= 1
-    then satisfyUpTo distance (== ' ')
-    else pure ""
+    currentCol <- column <$> getPosition
+    let distance = col - currentCol
+    if distance >= 1 then satisfyUpTo distance (== ' ') else pure ""
 
 pIndentSpaces :: Parser Text
 pIndentSpaces = do
-  nonIndentSpaces <- pNonIndentSpaces
-  let count0 = Text.length nonIndentSpaces
-  (count1, moreSpace) <- ((4,) <$> char '\t')
-                     <|> ((1,) <$> char ' ')
-  if count0 + count1 < 4
-    then mzero
-    else pure $ Text.snoc nonIndentSpaces moreSpace
+    nonIndentSpaces <- pNonIndentSpaces
+    let count0 = Text.length nonIndentSpaces
+    (count1, moreSpace) <- ((4, ) <$> char '\t') <|> ((1, ) <$> char ' ')
+    if count0 + count1 < 4 then mzero else pure $ Text.snoc nonIndentSpaces moreSpace
 
 -- Scan 0-3 spaces.
 pNonIndentSpaces :: Parser Text
@@ -86,9 +80,7 @@ isAsciiPunctuation :: Char -> Bool
 isAsciiPunctuation = inClass "!\"#$%&'()*+,./:;<=>?@[\\]^_`{|}~-"
 
 satisfyUpTo :: Int -> (Char -> Bool) -> Parser Text
-satisfyUpTo cnt f =
-  scan 0 $ \n c ->
-    n + 1 <$ guard (n < cnt && f c)
+satisfyUpTo cnt f = scan 0 $ \n c -> n + 1 <$ guard (n < cnt && f c)
 
 parenthesize :: Text -> Text
 parenthesize x = "(" <> x <> ")"

@@ -1,11 +1,3 @@
-{-# LANGUAGE DeriveFunctor         #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE MultiWayIf            #-}
-{-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE RecordWildCards       #-}
-{-# LANGUAGE ViewPatterns          #-}
-{-# OPTIONS_GHC -fno-warn-unused-do-bind #-}
 module Comark.Parser.Inline
   ( parseInlines
   , pReference
@@ -36,7 +28,6 @@ import Comark.Parser.Reference
 import Comark.Parser.Util
 import Comark.ParserCombinators
 import Comark.Syntax
-import Comark.Syntax.Builder
 import Text.Html.Email.Validate
 import Text.Html.Entity
 
@@ -82,6 +73,9 @@ parseLanguage t =
   where
     parser = pText <|> pBackslashed <|> pEntity
 
+str :: a -> Inlines a
+str = singleton . Str
+
 pText :: Parser (Inlines Text)
 pText = str <$> takeWhile1 (not . isSpecial)
 
@@ -114,7 +108,7 @@ pHardbreak =
     <* skipWhile (== ' ') -- ignore next line's leading spaces
   where
     spaceScape = do
-      replicateM 2 (char ' ')  -- two spaces
+      _ <- replicateM 2 (char ' ')  -- two spaces
       skipWhile (== ' ')       -- and more spaces (optionally)
 
 pSoftbreak :: Parser (Inlines Text)
@@ -154,7 +148,7 @@ pEntityText = char '&' *> entityBody <* char ';'
     entityBody =
       codepointEntity <|> namedEntity
     codepointEntity = do
-      char '#'
+      _ <- char '#'
       decEntity <|> hexEntity
     namedEntity = do
       name <- takeWhile1 (/= ';')
@@ -164,7 +158,7 @@ pEntityText = char '&' *> entityBody <* char ';'
     decEntity =
       Text.singleton . chrSafe <$> decimal
     hexEntity = do
-      char 'x' <|> char 'X'
+      _ <- char 'x' <|> char 'X'
       Text.singleton . chrSafe <$> hexadecimal
 
 -- [ Autolinks ] ---------------------------------------------------------------
@@ -275,10 +269,10 @@ pEmphTokens opts = do
         closer = Str "]"
 
     pInlineLink constr = do
-      char '(' *> optional pWhitespace
+      _ <- char '(' *> optional pWhitespace
       dest <- option "" pLinkDest
       title <- optional (pWhitespace *> pLinkTitle <* optional pWhitespace)
-      char ')'
+      _ <- char ')'
       pure $ singleton $ constr dest title
     pReferenceLink constr lbl = do
       Just ref <- (Just <$> pLinkLabel) <|> (lbl <$ optional "[]")
@@ -378,7 +372,7 @@ pLinkDest = LinkDestination <$> (pointy <|> nonPointy)
           , pEntityText
           , pBackslashedChar
           , parenthesize . Text.concat <$> do
-              char '('
+              _ <- char '('
               manyTill chunk (char ')')
           ]
 
@@ -420,7 +414,7 @@ pReference = do
     -- | optional scanWhitespace (including up to one line ending)
     scanWhitespaceNL = do
       skipWhile whitespaceNoNL
-      optional pLineEnding
+      _ <- optional pLineEnding
       skipWhile whitespaceNoNL
     whitespaceNoNL =
       isWhitespace <&&> not . isLineEnding

@@ -1,16 +1,20 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-{-# LANGUAGE ViewPatterns      #-}
 -- | Code and data types for parsing emphasis and links
 module Comark.Parser.Inline.EmphLink where
 
-import           Data.Text (Text)
-import qualified Data.Text as Text
+import           Data.Text                      ( Text )
+import qualified Data.Text                                    as Text
 
-import Comark.Parser.Reference
-import Comark.Syntax
+import           Comark.Parser.Reference
+import           Comark.Syntax
 
-import Data.Sequence (Seq, ViewR(..), singleton, viewr, (<|), (><), (|>))
+import           Data.Sequence                  ( Seq
+                                                , ViewR(..)
+                                                , singleton
+                                                , viewr
+                                                , (<|)
+                                                , (><)
+                                                , (|>)
+                                                )
 
 type DelimStack = Seq Token
 
@@ -24,11 +28,13 @@ data EmphDelim
   deriving (Show, Eq)
 
 unEmphDelim :: EmphDelim -> Inlines Text
-unEmphDelim EmphDelim{..} =
-  singleton . Str
-    . Text.replicate emphLength
-    . Text.singleton . indicatorChar
-    $ emphIndicator
+unEmphDelim EmphDelim { emphIndicator, emphLength } =
+    singleton
+        . Str
+        . Text.replicate emphLength
+        . Text.singleton
+        . indicatorChar
+        $ emphIndicator
 
 data LinkOpen
   = LinkOpen
@@ -41,10 +47,10 @@ data LinkOpen
 
 unLinkOpen :: LinkOpen -> Inlines Text
 unLinkOpen l =
-  case linkOpenerType l of
-    LinkOpener  -> Str "["
-    ImageOpener -> Str "!["
-   <| linkContent l
+    case linkOpenerType l of
+            LinkOpener  -> Str "["
+            ImageOpener -> Str "!["
+        <| linkContent l
 
 data Token
   = InlineToken (Inlines Text)
@@ -53,9 +59,9 @@ data Token
   deriving (Show, Eq)
 
 unToken :: Token -> Inlines Text
-unToken (InlineToken is)   = is
-unToken (EmphDelimToken e) = unEmphDelim e
-unToken (LinkOpenToken l)  = unLinkOpen l
+unToken (InlineToken    is) = is
+unToken (EmphDelimToken e ) = unEmphDelim e
+unToken (LinkOpenToken  l ) = unLinkOpen l
 
 isLinkOpener :: Token -> Bool
 isLinkOpener LinkOpenToken{} = True
@@ -85,22 +91,17 @@ data OpenerType
 
 deactivate :: Token -> Token
 deactivate (LinkOpenToken l) =
-  LinkOpenToken l
-    { linkActive = linkOpenerType l == ImageOpener }
+    LinkOpenToken l { linkActive = linkOpenerType l == ImageOpener }
 deactivate t = t
 
 addInline :: DelimStack -> Inline Text -> DelimStack
 addInline (viewr -> ts :> LinkOpenToken l) i =
-  ts |> LinkOpenToken l
-          { linkContent = linkContent l |> i }
-addInline (viewr -> ts :> InlineToken is) i =
-  ts |> InlineToken (is |> i)
-addInline ts i =
-  ts |> InlineToken (singleton i)
+    ts |> LinkOpenToken l { linkContent = linkContent l |> i }
+addInline (viewr -> ts :> InlineToken is) i = ts |> InlineToken (is |> i)
+addInline ts                              i = ts |> InlineToken (singleton i)
 
 addInlines :: DelimStack -> Inlines Text -> DelimStack
-addInlines (viewr -> ts :> InlineToken is) i =
-  ts |> InlineToken (is >< i)
+addInlines (viewr -> ts :> InlineToken is) i = ts |> InlineToken (is >< i)
 addInlines (viewr -> ts :> LinkOpenToken l) i =
-  ts |> LinkOpenToken l { linkContent = linkContent l >< i }
+    ts |> LinkOpenToken l { linkContent = linkContent l >< i }
 addInlines ts i = ts |> InlineToken i

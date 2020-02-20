@@ -7,9 +7,16 @@ author: Konstantin Zudov
 maintainer: co@zudov.me
 copyright: (c) Konstantin Zudov, 2014, 2015, 2016, 2017
 license: BSD3
-other-extensions:
+default-extensions:
 - DeriveDataTypeable
 - DeriveGeneric
+- DeriveFoldable
+- DeriveFunctor
+- DeriveAnyClass
+- DeriveTraversable
+- FlexibleInstances
+- OverloadedStrings
+- ViewPatterns
 dependencies:
 - base >=4.7 && <5.0
 - containers
@@ -20,4 +27,3 @@ library:
   ghc-options: -Wall -Werror
   exposed-modules:
   - Comark.Syntax
-  - Comark.Syntax.Builder

@@ -1,11 +1,3 @@
-{-# LANGUAGE DeriveFunctor       #-}
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE MultiWayIf          #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE RecordWildCards     #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TupleSections       #-}
-{-# LANGUAGE ViewPatterns        #-}
 module Comark.Parser
   ( parse
   , ParserOption(..)
@@ -81,11 +73,7 @@ parse (parserOptions -> opts) text =
 --------
 
 -- Container stack definitions:
-data ContainerStack
-  = ContainerStack
-      { csTop  :: Container
-      , csRest :: [Container]
-      }
+data ContainerStack = ContainerStack Container [Container]
 
 type LineNumber = Int
 
@@ -154,12 +142,13 @@ type ReferenceMap = Map LinkLabel (LinkDestination, Maybe LinkTitle)
 --   continued on a new line (ignoring lazy continuations).
 containerContinue :: Container -> Scanner
 containerContinue c = case containerType c of
-    BlockQuote     -> pNonIndentSpaces *> scanBlockquoteStart
-    QuestionBlock  -> pNonIndentSpaces *> scanQuestionStart
-    AnswerBlock    -> pNonIndentSpaces *> scanAnswerStart
-    IndentedCode   -> void pIndentSpaces
-    FencedCode{..} -> void $ pSpacesUpToColumn codeStartColumn
-    ListItem{..}   -> void pBlankline <|> (tabCrusher *> replicateM_ liPadding (char ' '))
+    BlockQuote -> pNonIndentSpaces *> scanBlockquoteStart
+    QuestionBlock -> pNonIndentSpaces *> scanQuestionStart
+    AnswerBlock -> pNonIndentSpaces *> scanAnswerStart
+    IndentedCode -> void pIndentSpaces
+    FencedCode i _ _ -> void $ pSpacesUpToColumn i
+    ListItem padding _ -> void pBlankline
+                      <|> (tabCrusher *> replicateM_ padding (char ' '))
     -- TODO: This is likely to be incorrect behaviour. Check.
     Reference -> notFollowedBy
       (void pBlankline
@@ -270,8 +259,8 @@ addLeaf lineNum lf = do
 -- Add a container to the container stack.
 addContainer :: ContainerType -> ContainerM ()
 addContainer ct =
-  modify $ \ContainerStack{..} ->
-    ContainerStack (Container ct mempty) (csTop:csRest)
+  modify $ \(ContainerStack x xs) ->
+    ContainerStack (Container ct mempty) (x : xs)
 
 -- Step 2
 

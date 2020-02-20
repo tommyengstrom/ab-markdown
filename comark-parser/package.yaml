@@ -10,18 +10,23 @@ license: BSD3
 dependencies:
 - text
 - comark-syntax
+default-extensions:
+- DeriveAnyClass
+- DeriveFunctor
+- DerivingStrategies
+- GeneralizedNewtypeDeriving
+- LambdaCase
+- MultiWayIf
+- OverloadedStrings
+- ScopedTypeVariables
+- TupleSections
+- TypeFamilies
+- ViewPatterns
+- NamedFieldPuns
 library:
   source-dirs:
   - src/
   - extended/
-  other-extensions:
-  - OverloadedStrings
-  - TupleSections
-  - TupleSections
-  - ViewPatterns
-  - OverloadedStrings
-  - LambdaCase
-  - RecordWildCards
   ghc-options: -Wall -Werror
   exposed-modules:
   - Comark.Parser

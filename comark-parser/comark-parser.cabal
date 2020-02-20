@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1a88de787bd3b30c27875df5cdf8732015ef2dd8a1b3ffdf0b5497b129f5c025
+-- hash: a5c1cbd069487f044cfb513ad5f5ac68d09684b708f9402a661686d516f19bea
 
 name:                comark-parser
 version:             0.1.0
@@ -22,6 +22,7 @@ library
   hs-source-dirs:
       src/
       extended/
+  default-extensions: DeriveAnyClass DeriveFunctor DerivingStrategies GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies ViewPatterns NamedFieldPuns
   exposed-modules:
       Comark.Parser
       Comark.Parser.Options
@@ -37,7 +38,6 @@ library
       Data.Sequence.Extended
       Data.Text.Extended
       Paths_comark_parser
-  other-extensions: OverloadedStrings TupleSections TupleSections ViewPatterns OverloadedStrings LambdaCase RecordWildCards
   build-depends:
       base >=4.7 && <5.0
     , comark-syntax
@@ -52,6 +52,7 @@ library
 test-suite test
   hs-source-dirs:
       tests/
+  default-extensions: DeriveAnyClass DeriveFunctor DerivingStrategies GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies ViewPatterns NamedFieldPuns
   main-is: Main.hs
   other-modules:
       Blocks
@@ -77,6 +78,7 @@ benchmark bench
   type: exitcode-stdio-1.0
   hs-source-dirs:
       bench/
+  default-extensions: DeriveAnyClass DeriveFunctor DerivingStrategies GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies ViewPatterns NamedFieldPuns
   main-is: Main.hs
   build-depends:
       base >=4.7 && <5

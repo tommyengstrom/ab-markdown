@@ -30,12 +30,12 @@ import           Data.Sequence                  ( Seq
 import           Data.String                    ( IsString(..) )
 import           GHC.Generics                   ( Generic )
 import           Data.Text                      ( Text )
+import           Data.Aeson
+
 -- | A Document
 newtype Doc t = Doc (Blocks t)
-  deriving ( Show, Read, Eq
-           , Typeable, Data, Generic
-           , Functor, Foldable, Traversable
-           )
+  deriving ( Show, Read, Eq, Typeable, Data, Generic, Functor, Foldable, Traversable)
+  deriving newtype (ToJSON, FromJSON)
 
 instance NFData t => NFData (Doc t)
 
@@ -63,13 +63,13 @@ data Block t
   -- ^ List: Type of the list, tightness, a sequnce of blocks (list item)
   | List ListType Bool (Seq (Blocks t))
   deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable
-           , NFData)
+           , NFData, ToJSON, FromJSON)
 
 
 data Language
     = Unknown Text
     | Haskell
-    deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
+    deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, FromJSON, ToJSON)
 
 data HeadingLevel
   = Heading1
@@ -79,27 +79,27 @@ data HeadingLevel
   | Heading5
   | Heading6
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, FromJSON, ToJSON)
 
 data ListType
   = Ordered Delimiter Int
   | Bullet BulletMarker
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, FromJSON, ToJSON)
 
 
 data Delimiter
   = Period
   | Paren
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, FromJSON, ToJSON)
 
 data BulletMarker
   = Minus    -- ^ @-@
   | Plus     -- ^ @+@
   | Asterisk -- ^ @*@
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, FromJSON, ToJSON)
 
 type Inlines t = Seq (Inline t)
 
@@ -126,7 +126,8 @@ data Inline t
   --   as @<br />@
   | HardBreak
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable, NFData)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable, NFData
+    , ToJSON, FromJSON)
 
 instance IsString t => IsString (Inline t) where
     fromString = Str . fromString

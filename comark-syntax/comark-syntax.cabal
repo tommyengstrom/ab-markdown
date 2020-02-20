@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9bf958a9d37922e05bbf1d115cf40b228305e5d5bfa911e0fb64d2c75805bc5f
+-- hash: dd214c1b6e6ccbad653125d2ec5a2eec194a62114881c1f62d80ca51872164e1
 
 name:           comark-syntax
 version:        0.1.0
@@ -21,15 +21,18 @@ build-type:     Simple
 library
   hs-source-dirs:
       src/
-  default-extensions: DeriveDataTypeable DeriveGeneric DeriveFoldable DeriveFunctor DeriveAnyClass DeriveTraversable FlexibleInstances OverloadedStrings ViewPatterns
+  default-extensions: DeriveDataTypeable DeriveGeneric DeriveFoldable DeriveFunctor DeriveAnyClass DeriveTraversable DerivingStrategies GeneralizedNewtypeDeriving FlexibleInstances OverloadedStrings ViewPatterns
   ghc-options: -Wall -Werror
   build-depends:
-      base >=4.7 && <5.0
+      aeson
+    , base >=4.7 && <5.0
     , containers
     , deepseq
+    , elm-bridge
     , text
   exposed-modules:
       Comark.Syntax
   other-modules:
+      Comark.Elm
       Paths_comark_syntax
   default-language: Haskell2010

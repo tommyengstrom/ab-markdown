@@ -8,16 +8,17 @@ maintainer: co@zudov.me
 copyright: (c) Konstantin Zudov, 2014, 2015, 2016, 2017
 license: BSD3
 default-extensions:
+- DeriveAnyClass
 - DeriveDataTypeable
-- DeriveGeneric
 - DeriveFoldable
 - DeriveFunctor
-- DeriveAnyClass
+- DeriveGeneric
 - DeriveTraversable
 - DerivingStrategies
-- GeneralizedNewtypeDeriving
 - FlexibleInstances
+- GeneralizedNewtypeDeriving
 - OverloadedStrings
+- LambdaCase
 - ViewPatterns
 dependencies:
 - base >=4.7 && <5.0

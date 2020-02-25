@@ -30,12 +30,10 @@ import           Data.Sequence                  ( Seq
 import           Data.String                    ( IsString(..) )
 import           GHC.Generics                   ( Generic )
 import           Data.Text                      ( Text )
-import           Data.Aeson
 
 -- | A Document
 newtype Doc t = Doc (Blocks t)
   deriving ( Show, Read, Eq, Typeable, Data, Generic, Functor, Foldable, Traversable)
-  deriving newtype (ToJSON, FromJSON)
 
 instance NFData t => NFData (Doc t)
 
@@ -63,13 +61,13 @@ data Block t
   -- ^ List: Type of the list, tightness, a sequnce of blocks (list item)
   | List ListType Bool (Seq (Blocks t))
   deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable
-           , NFData, ToJSON, FromJSON)
+           , NFData)
 
 
 data Language
     = Unknown Text
     | Haskell
-    deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, FromJSON, ToJSON)
+    deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
 
 data HeadingLevel
   = Heading1
@@ -79,27 +77,27 @@ data HeadingLevel
   | Heading5
   | Heading6
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, FromJSON, ToJSON)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
 
 data ListType
   = Ordered Delimiter Int
   | Bullet BulletMarker
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, FromJSON, ToJSON)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
 
 
 data Delimiter
   = Period
   | Paren
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, FromJSON, ToJSON)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
 
 data BulletMarker
   = Minus    -- ^ @-@
   | Plus     -- ^ @+@
   | Asterisk -- ^ @*@
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, FromJSON, ToJSON)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
 
 type Inlines t = Seq (Inline t)
 
@@ -127,7 +125,7 @@ data Inline t
   | HardBreak
   deriving
     (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable, NFData
-    , ToJSON, FromJSON)
+    )
 
 instance IsString t => IsString (Inline t) where
     fromString = Str . fromString

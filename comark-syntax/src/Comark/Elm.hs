@@ -4,24 +4,24 @@
 
 module Comark.Elm where
 
-import           Elm.Derive
+import           Elm.Derive              hiding ( defaultOptions )
 import           Elm.Module
 import           Elm.Versions
 import           Elm.TyRep
 import           Data.Proxy
 import           Data.Text                      ( Text )
 import           Comark.Syntax
+import           Data.Aeson
 
-
-deriveElmDef defaultOptions ''Doc
+deriveBoth defaultOptions ''Doc
 deriveElmDef defaultOptions ''Blocks
-deriveElmDef defaultOptions ''Block
-deriveElmDef defaultOptions ''HeadingLevel
-deriveElmDef defaultOptions ''Language
-deriveElmDef defaultOptions ''ListType
-deriveElmDef defaultOptions ''Delimiter
-deriveElmDef defaultOptions ''BulletMarker
-deriveElmDef defaultOptions ''Inline
+deriveBoth defaultOptions ''Block
+deriveBoth defaultOptions ''HeadingLevel
+deriveBoth defaultOptions ''Language
+deriveBoth defaultOptions ''ListType
+deriveBoth defaultOptions ''Delimiter
+deriveBoth defaultOptions ''BulletMarker
+deriveBoth defaultOptions ''Inline
 deriveElmDef defaultOptions ''Inlines
 
 
@@ -54,7 +54,7 @@ main = do
             , DefineElm (Proxy @(Inline Text))
             , DefineElm (Proxy @(Inlines Text))
             ]
-        fName = "/home/tommy/git/sticky/apps/webapp/src/Markdown.elm"
+        fName = "/home/tommy/git/awebitious/apps/webapp/src/Markdown.elm"
     writeFile fName $ elmModule
     putStrLn $ "Wrote file: " <> fName
 

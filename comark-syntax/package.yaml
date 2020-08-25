@@ -32,3 +32,4 @@ library:
   ghc-options: -Wall -Werror
   exposed-modules:
   - Comark.Syntax
+  - Comark.Elm

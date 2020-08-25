@@ -54,6 +54,7 @@ main = do
             , DefineElm (Proxy @BulletMarker)
             , DefineElm (Proxy @(Inline Text))
             , DefineElm (Proxy @(Inlines Text))
+            , DefineElm (Proxy @TaskStatus)
             ]
         fName = "/home/tommy/git/awebitious/apps/webapp/src/Markdown.elm"
     writeFile fName $ elmModule

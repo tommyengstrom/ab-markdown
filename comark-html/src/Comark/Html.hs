@@ -137,7 +137,10 @@ renderInlines :: Inlines Text -> HtmlBuilder
 renderInlines = mapM_ renderInline
 
 renderInline :: Inline Text -> HtmlBuilder
-renderInline (Str t)              = escapedText t
+renderInline (Str t    ) = escapedText t
+renderInline (Task s is) = case s of
+    Done -> tell "[x]" *> renderInlines is
+    Todo -> tell "[ ]" *> renderInlines is
 renderInline SoftBreak            = tell "\n"
 renderInline HardBreak            = voidTag "br" *> nl
 renderInline (Emph   is         ) = tag "em" (renderInlines is)

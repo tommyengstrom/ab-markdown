@@ -22,6 +22,7 @@ deriveBoth defaultOptions ''ListType
 deriveBoth defaultOptions ''Delimiter
 deriveBoth defaultOptions ''BulletMarker
 deriveBoth defaultOptions ''Inline
+deriveBoth defaultOptions ''TaskStatus
 deriveElmDef defaultOptions ''Inlines
 
 

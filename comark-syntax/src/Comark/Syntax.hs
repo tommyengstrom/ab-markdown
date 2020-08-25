@@ -12,6 +12,7 @@ module Comark.Syntax
     -- * Inline Elements
     , Inlines
     , Inline(..)
+    , TaskStatus(..)
     , Language(..)
     , normalize
     , asText
@@ -46,23 +47,21 @@ instance Monoid (Doc t) where
 type Blocks t = Seq (Block t)
 
 -- | Block elements
-data Block t
-  -- ^ Thematic break
+data Block t -- ^ Thematic break
   = ThematicBreak
-  -- ^ Heading: level, sequnce of inlines that define content
   | Heading HeadingLevel (Inlines t)
-  -- ^ Block of code: info string, literal content
   | CodeBlock (Maybe Language) t
-  -- ^ Paragraph (a grouped sequence of inlines)
   | Paragraph (Inlines t)
-  -- ^ Block Quote (a quoted sequence of blocks)
   | Question (Blocks t) (Maybe (Blocks t))
-  | Quote (Blocks t)
-  -- ^ List: Type of the list, tightness, a sequnce of blocks (list item)
-  | List ListType Bool (Seq (Blocks t))
+  | Quote (Blocks t) -- ^ Block Quote (a quoted sequence of blocks)
+  | List ListType Bool (Seq (Blocks t)) -- ^ List: Type of the list, tightness, a sequnce of blocks (list item)
   deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable
            , NFData)
 
+data TaskStatus
+    = Todo
+    | Done
+    deriving (Show, Eq, Ord, Read, Typeable, NFData, Data, Generic)
 
 data Language
     = Unknown Text
@@ -123,6 +122,7 @@ data Inline t
   --   backslash, see the spec for details). In html it would be rendered
   --   as @<br />@
   | HardBreak
+  | Task TaskStatus (Inlines t) -- TODO: Add `Maybe Deadline`
   deriving
     (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable, NFData
     )
@@ -147,11 +147,17 @@ normalize inlines = case viewl inlines of
 --   Note that it extracts only the 'primary' content (the one that is shown in
 --   first place). For example it wouldn't extract an URL from the link.
 asText :: (Monoid a, IsString a) => Inline a -> a
-asText (Str    t    ) = t
-asText (Emph   is   ) = foldMap asText is
-asText (Strong is   ) = foldMap asText is
-asText (Code   t    ) = t
-asText (Link  is _ _) = foldMap asText is
-asText (Image is _ _) = foldMap asText is
-asText SoftBreak      = " "
-asText HardBreak      = "\n"
+asText (Str    t    )   = t
+asText (Emph   is   )   = foldMap asText is
+asText (Strong is   )   = foldMap asText is
+asText (Code   t    )   = t
+asText (Link  is _ _)   = foldMap asText is
+asText (Image is _ _)   = foldMap asText is
+asText SoftBreak        = " "
+asText HardBreak        = "\n"
+asText (Task status is) = renderStatus status <> " " <> foldMap asText is
+
+renderStatus :: IsString a => TaskStatus -> a
+renderStatus = \case
+    Todo -> fromString "[ ]"
+    Done -> fromString "[x]"

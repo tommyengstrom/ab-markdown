@@ -55,6 +55,7 @@ pInline opts =
     [ pText
     , pHardbreak
     , pSoftbreak
+    , pTask opts
     , guard (_poParseEmphasis opts) *> pEmphLink opts
     , pBackslashed
     , pAutolink
@@ -136,6 +137,14 @@ pCode = singleton <$> do
     spaceChunk         =  " " <$ takeWhile1 isCollapsableSpace
     isCollapsableSpace = (== ' ') <||> isLineEnding
 
+
+pTask :: ParserOptions -> Parser (Inlines Text)
+pTask opts = fmap singleton $ do
+    _ <- char '['
+    status <- const Done <$> char 'x'
+          <|> const Todo <$> char ' '
+    _ <- char ']'
+    Task status <$> pInline opts
 
 -- [ Entities ] ----------------------------------------------------------------
 

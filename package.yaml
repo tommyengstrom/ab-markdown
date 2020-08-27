@@ -34,19 +34,22 @@ dependencies:
 - html5-entity >=0.2.0.1
 - text
 - transformers
+- QuickCheck
+- quickcheck-arbitrary-adt
 library:
   source-dirs:
     - src/
     - extended/
   ghc-options: -Wall -Werror
   #  exposed-modules:
-  #  - AbMarkdown.Syntax
-  #  - AbMarkdown.Elm
+  #  - Comark.Syntax
+  #  - Comark.Elm
 tests:
   test:
     main: Main.hs
     source-dirs: tests/
     ghc-options: -Wall -Werror
     dependencies:
+    - base >=4.7
     - hspec
-    - QuickCheck
+    - ab-markdown

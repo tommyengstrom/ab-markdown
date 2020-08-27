@@ -34,7 +34,22 @@ renderHeadingLevel = \case
     Heading6 -> "###### "
 
 renderInlines :: Inlines Text -> Text
-renderInlines = undefined
+renderInlines = foldMap renderInline
+
+renderInline :: Inline Text -> Text
+renderInline = \case
+    Str    t             -> t
+    Emph   is            -> "*" <> renderInlines is <> "*"
+    Strong is            -> "**" <> renderInlines is <> "**"
+    Code   t             -> "```\n" <> t <> "\n```\n"
+    Link  is dest _title -> "[" <> renderInlines is <> "](" <> dest <> ")"
+    Image is dest _title -> "![" <> renderInlines is <> "](" <> dest <> ")"
+    SoftBreak            -> "\n"
+    HardBreak            -> "\n\n"
+    Task status is       -> case status of
+        Todo -> "[ ] " <> renderInlines is
+        Done -> "[x] " <> renderInlines is
+
 
 renderCodeBlock :: Maybe Language -> Text -> Text
 renderCodeBlock ml t = mconcat ["```", lang, "\n", t, "```"]

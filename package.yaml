@@ -40,8 +40,8 @@ library:
     - extended/
   ghc-options: -Wall -Werror
   #  exposed-modules:
-  #  - Comark.Syntax
-  #  - Comark.Elm
+  #  - AbMarkdown.Syntax
+  #  - AbMarkdown.Elm
 tests:
   test:
     main: Main.hs

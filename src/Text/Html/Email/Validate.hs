@@ -3,7 +3,7 @@ module Text.Html.Email.Validate
     )
 where
 
-import           Comark.ParserCombinators
+import           AbMarkdown.ParserCombinators
 import           Control.Monad
 import           Data.Either                    ( isRight )
 import           Data.Text                      ( Text )

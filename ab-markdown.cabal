@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ffadcfe439e8d12eb61b045633871e7fe951b09dff5062f5dffcaf6631d0c7f6
+-- hash: cc13343786d0c805f5f5fcbd1abf88c828c351796dcdd9d5c83e85910c597943
 
 name:           ab-markdown
 version:        0.1.0
@@ -19,17 +19,17 @@ build-type:     Simple
 
 library
   exposed-modules:
-      Comark.Elm
-      Comark.Parser
-      Comark.Parser.Inline
-      Comark.Parser.Inline.EmphLink
-      Comark.Parser.Options
-      Comark.Parser.Reference
-      Comark.Parser.Util
-      Comark.ParserCombinators
-      Comark.ParserCombinators.Prim
-      Comark.Render
-      Comark.Syntax
+      AbMarkdown.Elm
+      AbMarkdown.Parser
+      AbMarkdown.Parser.Inline
+      AbMarkdown.Parser.Inline.EmphLink
+      AbMarkdown.Parser.Options
+      AbMarkdown.Parser.Reference
+      AbMarkdown.Parser.Util
+      AbMarkdown.ParserCombinators
+      AbMarkdown.ParserCombinators.Prim
+      AbMarkdown.Render
+      AbMarkdown.Syntax
       Text.Html.Email.Validate
       Data.Char.Extended
       Data.Sequence.Extended

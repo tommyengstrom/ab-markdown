@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 -- | Code and data types for parsing emphasis and links
 module Comark.Parser.Inline.EmphLink where
 
@@ -18,14 +19,13 @@ import           Data.Sequence                  ( Seq
 
 type DelimStack = Seq Token
 
-data EmphDelim
-  = EmphDelim
-      { emphIndicator :: EmphIndicator
-      , emphLength    :: Int
-      , emphCanOpen   :: Bool
-      , emphCanClose  :: Bool
-      }
-  deriving (Show, Eq)
+data EmphDelim = EmphDelim
+    { emphIndicator :: EmphIndicator
+    , emphLength    :: Int
+    , emphCanOpen   :: Bool
+    , emphCanClose  :: Bool
+    }
+    deriving (Show, Eq)
 
 unEmphDelim :: EmphDelim -> Inlines Text
 unEmphDelim EmphDelim { emphIndicator, emphLength } =
@@ -36,14 +36,13 @@ unEmphDelim EmphDelim { emphIndicator, emphLength } =
         . indicatorChar
         $ emphIndicator
 
-data LinkOpen
-  = LinkOpen
-      { linkOpenerType :: OpenerType
-      , linkActive     :: Bool
-      , linkLabel      :: Maybe LinkText
-      , linkContent    :: Inlines Text
-      }
-  deriving (Show, Eq)
+data LinkOpen = LinkOpen
+    { linkOpenerType :: OpenerType
+    , linkActive     :: Bool
+    , linkLabel      :: Maybe LinkText
+    , linkContent    :: Inlines Text
+    }
+    deriving (Show, Eq)
 
 unLinkOpen :: LinkOpen -> Inlines Text
 unLinkOpen l =

@@ -76,7 +76,7 @@ renderQuote :: Blocks Text -> Text
 renderQuote = undefined
 
 renderList :: ListType -> Bool -> (Seq (Blocks Text)) -> Text
-renderList lt tight blocksSeq = T.intercalate "\n" . zipWith mkBlock [1 ..] $ toList
+renderList lt _tight blocksSeq = T.intercalate "\n" . zipWith mkBlock [1 ..] $ toList
     blocksSeq
   where
     mkBlock :: Int -> Blocks Text -> Text

@@ -1,22 +1,21 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Main where
 
 import           Test.Hspec
---import           Test.Hspec.QuickCheck
---import           AbMarkdown.Parser
---import           AbMarkdown.Render
---import           Test.QuickCheck
+import           Test.Hspec.QuickCheck
+import           AbMarkdown.Parser
+import           AbMarkdown.Render
+import           AbMarkdown.Syntax              ( )
+import           Test.QuickCheck
+import           Data.Text                      ( Text )
+import qualified Data.Text                                    as T
 
+instance Arbitrary Text where
+    arbitrary = T.intercalate " " <$> listOf bogusWord
+      where
+        bogusWord :: Gen Text
+        bogusWord = fmap T.pack . listOf1 $ elements ['a' .. 'z']
 
---arbitraryBlock :: Gen Text -> Gen (Block Text)
---arbitraryBlock genText = oneOf
---    [ ThematicBreak
---    , Heading <$> arbitrary (Inlines t)
---    , CodeBlock (Maybe Language) t
---    , Paragraph (Inlines t)
---    , Question (Blocks t) (Maybe (Blocks t))
---    , Quote (Blocks t) -- ^ Block Quote (a quoted sequence of blocks)
---    , List ListType Bool (Seq (Blocks t)) -- ^ List: Type of the list, tightness, a sequnce of blocks (list item)
---    ]
 
 main :: IO ()
 main = hspec $ do
@@ -31,4 +30,6 @@ main = hspec $ do
         xit "Question  block works" $ shouldBe False True
         xit "Quote  block works" $ shouldBe False True
         xit "List  block works" $ shouldBe False True
-        xit "Full document works" $ shouldBe False True
+        prop "Full document works" $ do
+            doc <- arbitrary
+            pure $ doc `shouldBe` parse [] (render doc)

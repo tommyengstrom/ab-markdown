@@ -26,6 +26,7 @@ import           Data.Data                      ( Data
 import           Data.Sequence                  ( Seq
                                                 , ViewL(..)
                                                 , viewl
+                                                , fromList
                                                 , (<|)
                                                 )
 import           Data.String                    ( IsString(..) )
@@ -161,8 +162,8 @@ instance Arbitrary t => Arbitrary (Inline t) where
     arbitrary = oneof
         [ Str <$> arbitrary
         , Code <$> arbitrary
-        , Emph <$> scaleDown arbitrary
-        , Strong <$> scaleDown arbitrary
+        , Emph . fromList <$> scaleDown (listOf1 arbitrary)
+        , Strong . fromList <$> scaleDown (listOf1 arbitrary)
         , Link <$> scaleDown arbitrary <*> arbitrary <*> arbitrary
         , Image <$> scaleDown arbitrary <*> arbitrary <*> arbitrary
         , pure SoftBreak

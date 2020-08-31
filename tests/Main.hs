@@ -5,17 +5,25 @@ import           Test.Hspec
 import           Test.Hspec.QuickCheck
 import           AbMarkdown.Parser
 import           AbMarkdown.Render
-import           AbMarkdown.Syntax              ( )
+import           AbMarkdown.Syntax
 import           Test.QuickCheck
 import           Data.Text                      ( Text )
 import qualified Data.Text                                    as T
+import qualified Data.Sequence                                as Seq
 
 instance Arbitrary Text where
-    arbitrary = T.intercalate " " <$> listOf bogusWord
+    arbitrary = T.intercalate " " <$> listOf1 bogusWord
       where
         bogusWord :: Gen Text
         bogusWord = fmap T.pack . listOf1 $ elements ['a' .. 'z']
 
+data InlineTest = InlineTest
+    { asDoc    :: Doc Text
+    , reparsed :: Doc Text
+    , original :: Inline Text
+    , rendered :: Text
+    }
+    deriving (Show, Eq)
 
 main :: IO ()
 main = hspec $ do
@@ -23,13 +31,55 @@ main = hspec $ do
         xit "Can parser question without answer" $ shouldBe False True
         xit "Can parser question with answer" $ shouldBe False True
     describe "Partial isomorphism `parse == parser . render . parse`" $ do
-        xit "ThematicBreak block works" $ shouldBe False True
-        xit "Heading block works" $ shouldBe False True
-        xit "CodeBlock block works" $ shouldBe False True
-        xit "Paragraph  block works" $ shouldBe False True
-        xit "Question  block works" $ shouldBe False True
-        xit "Quote  block works" $ shouldBe False True
-        xit "List  block works" $ shouldBe False True
-        prop "Full document works" $ do
-            doc <- arbitrary
-            pure $ doc `shouldBe` parse [] (render doc)
+        describe "Inline without recursion" $ do
+            let checkInline :: Inline Text -> Gen Expectation
+                checkInline inline = do
+                    let doc   = Doc . pure . Paragraph @Text $ pure inline
+                        kuken = InlineTest { asDoc    = doc
+                                           , reparsed = parse [Normalize] (render doc)
+                                           , original = inline
+                                           , rendered = render doc
+                                           }
+                    pure $ kuken `shouldSatisfy` (\x -> asDoc x == reparsed x)
+
+                simpleInline :: Gen (Inline Text)
+                simpleInline = Str <$> arbitrary @Text
+
+                simpleInlines :: Gen (Inlines Text)
+                simpleInlines = fmap pure simpleInline
+
+            prop "Str" $ checkInline =<< Str <$> arbitrary @Text
+            prop "Code" $ checkInline =<< Code <$> arbitrary @Text
+            prop "Emph" $ checkInline =<< Emph . pure <$> simpleInline
+            prop "Strong" $ checkInline =<< Strong . pure <$> simpleInline
+            prop "Link"
+                $   checkInline
+                =<< Link
+                <$> simpleInlines
+                <*> arbitrary
+                <*> arbitrary
+            prop "Image"
+                $   checkInline
+                =<< Image
+                <$> simpleInlines
+                <*> arbitrary
+                <*> arbitrary
+            xit "Image" $ shouldBe False True
+            xit "SoftBreak" $ shouldBe False True
+            -- prop "HardBreak" $ checkInline HardBreak -- Not sure this can be done at start of line
+            xit "Task" $ shouldBe False True
+--        describe "Inline unlimited" $ do
+--            prop "Emph" $ checkInline =<< Emph . Seq.fromList <$> resize
+--                1
+--                (listOf1 $ arbitrary @(Inline Text))
+        describe "Block" $ do
+            xit "ThematicBreak" $ shouldBe False True
+            xit "Heading" $ shouldBe False True
+            xit "CodeBlock" $ shouldBe False True
+            xit "Paragraph " $ shouldBe False True
+            xit "Question " $ shouldBe False True
+            xit "Quote " $ shouldBe False True
+            xit "List " $ shouldBe False True
+       -- prop "Full document works" $ do
+       --     doc <- arbitrary
+       --     pure $ doc `shouldBe` parse [] (render doc)

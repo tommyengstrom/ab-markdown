@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 273097c61b81cb2413b7ab83094e6b384f7e20e61d6dc9c6b42e867a3352f77e
+-- hash: 51080e7b83b1cdeda0a31eb5d8eaa63df7042c37a8064665beef2f381d4da45f
 
 name:           ab-markdown
 version:        0.1.0
@@ -39,7 +39,7 @@ library
   hs-source-dirs:
       src/
       extended/
-  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies ViewPatterns
+  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies TypeApplications ViewPatterns
   ghc-options: -Wall -Werror
   build-depends:
       QuickCheck
@@ -51,7 +51,6 @@ library
     , elm-bridge
     , html5-entity >=0.2.0.1
     , quickcheck-arbitrary-adt
-    , recursion-schemes
     , text
     , transformers
   default-language: Haskell2010
@@ -63,13 +62,15 @@ test-suite test
       Paths_ab_markdown
   hs-source-dirs:
       tests/
-  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies ViewPatterns
+  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies TypeApplications ViewPatterns
   ghc-options: -Wall -Werror
   build-depends:
       QuickCheck
     , ab-markdown
     , aeson
+    , aeson-pretty
     , base >=4.7
+    , bytestring
     , containers
     , control-bool
     , deepseq
@@ -77,7 +78,6 @@ test-suite test
     , hspec
     , html5-entity >=0.2.0.1
     , quickcheck-arbitrary-adt
-    , recursion-schemes
     , text
     , transformers
   default-language: Haskell2010

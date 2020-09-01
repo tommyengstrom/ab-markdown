@@ -23,6 +23,7 @@ deriveBoth defaultOptions ''Delimiter
 deriveBoth defaultOptions ''BulletMarker
 deriveBoth defaultOptions ''Inline
 deriveBoth defaultOptions ''TaskStatus
+deriveBoth defaultOptions ''LinkRef
 deriveElmDef defaultOptions ''Inlines
 
 

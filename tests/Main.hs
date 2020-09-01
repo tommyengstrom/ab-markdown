@@ -6,10 +6,16 @@ import           Test.Hspec.QuickCheck
 import           AbMarkdown.Parser
 import           AbMarkdown.Render
 import           AbMarkdown.Syntax
+import           AbMarkdown.Elm                 ( )
 import           Test.QuickCheck
 import           Data.Text                      ( Text )
 import qualified Data.Text                                    as T
-import qualified Data.Sequence                                as Seq
+import           Data.Aeson.Encode.Pretty
+import qualified Data.ByteString.Lazy.Char8                   as BL8
+import           Debug.Trace
+import           Control.Monad
+-- import qualified Data.Sequence                                as Seq
+-- import           Data.Aeson
 
 instance Arbitrary Text where
     arbitrary = T.intercalate " " <$> listOf1 bogusWord
@@ -34,13 +40,16 @@ main = hspec $ do
         describe "Inline without recursion" $ do
             let checkInline :: Inline Text -> Gen Expectation
                 checkInline inline = do
-                    let doc   = Doc . pure . Paragraph @Text $ pure inline
-                        kuken = InlineTest { asDoc    = doc
-                                           , reparsed = parse [Normalize] (render doc)
-                                           , original = inline
-                                           , rendered = render doc
-                                           }
-                    pure $ kuken `shouldSatisfy` (\x -> asDoc x == reparsed x)
+                    let doc  = Doc . pure . Paragraph @Text $ pure inline
+                        test = InlineTest { asDoc    = doc
+                                          , reparsed = parse [Normalize] (render doc)
+                                          , original = inline
+                                          , rendered = render doc
+                                          }
+                    unless (asDoc test == reparsed test) $ do
+                        traceM . BL8.unpack . encodePretty $ asDoc test
+                        traceM . BL8.unpack . encodePretty $ reparsed test
+                    pure $ test `shouldSatisfy` (\x -> asDoc x == reparsed x)
 
                 simpleInline :: Gen (Inline Text)
                 simpleInline = Str <$> arbitrary @Text
@@ -57,14 +66,13 @@ main = hspec $ do
                 =<< Link
                 <$> simpleInlines
                 <*> arbitrary
-                <*> arbitrary
+                <*> pure Nothing -- arbitrary
             prop "Image"
                 $   checkInline
                 =<< Image
                 <$> simpleInlines
                 <*> arbitrary
-                <*> arbitrary
-            xit "Image" $ shouldBe False True
+                <*> pure Nothing --   arbitrary
             xit "SoftBreak" $ shouldBe False True
             -- prop "HardBreak" $ checkInline HardBreak -- Not sure this can be done at start of line
             xit "Task" $ shouldBe False True

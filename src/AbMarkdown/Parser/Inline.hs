@@ -179,11 +179,11 @@ pAutolink = char '<' *> (pUrl <|> pEmail) <* char '>'
               chars <- takeTill ((isAscii <&&> (isWhitespace <||> isControl))
                                     <||> (== '>') <||> (== '<'))
               let uri = scheme <> ":" <> chars
-              pure $ singleton $ Link (str uri) uri Nothing
+              pure $ singleton $ Link (str uri) (LinkRef uri) Nothing
           pEmail = do
               email <- isValidEmail `mfilter` takeWhile1 (/= '>')
               pure $ singleton $
-                Link (str email) ("mailto:" <> email) Nothing
+                Link (str email) (LinkRef $ "mailto:" <> email) Nothing
 
 pScheme :: Parser Text
 pScheme = do
@@ -260,8 +260,8 @@ pEmphTokens opts = do
               addInlines prefix (unLinkOpen opener) <> addInline suffix closer
             constr (runLinkDestination -> d) (fmap runLinkTitle -> t) =
               case linkOpenerType opener of
-                LinkOpener  -> Link content d t
-                ImageOpener -> Image content d t
+                LinkOpener  -> Link content (LinkRef d) t
+                ImageOpener -> Image content (LinkRef d) t
             deactivating =
               case linkOpenerType opener of
                 LinkOpener  -> fmap deactivate

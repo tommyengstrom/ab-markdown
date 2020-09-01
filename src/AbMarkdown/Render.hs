@@ -42,8 +42,8 @@ renderInline = \case
     Emph   is            -> "*" <> renderInlines is <> "*"
     Strong is            -> "**" <> renderInlines is <> "**"
     Code   t             -> "`" <> t <> "`"
-    Link  is dest _title -> "[" <> renderInlines is <> "](" <> dest <> ")"
-    Image is dest _title -> "![" <> renderInlines is <> "](" <> dest <> ")"
+    Link  is dest _title -> "[" <> renderInlines is <> "](" <> unLinkRef dest <> ")"
+    Image is dest _title -> "![" <> renderInlines is <> "](" <> unLinkRef dest <> ")"
     SoftBreak            -> "\n"
     HardBreak            -> "\\\n"
     Task status is       -> case status of

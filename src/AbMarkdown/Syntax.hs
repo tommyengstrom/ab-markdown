@@ -15,6 +15,7 @@ module AbMarkdown.Syntax
     , TaskStatus(..)
     , Language(..)
     , normalize
+    , LinkRef(..)
     , asText
     )
 where
@@ -133,6 +134,15 @@ instance Arbitrary BulletMarker where
 
 type Inlines t = Seq (Inline t)
 
+newtype LinkRef = LinkRef
+    {unLinkRef :: Text
+    } deriving (Show, Read, Eq, Ord, Typeable, Data, Generic)
+    deriving newtype (IsString, NFData)
+
+instance Arbitrary LinkRef where
+    arbitrary =
+        elements ["https://google.com", "dn.se", "mailto:something@something.com"]
+
 -- | Inline elements
 data Inline t
   -- ^ Text (string)
@@ -144,9 +154,9 @@ data Inline t
   -- ^ Strongly emphasized text (a sequence of inlines)
   | Strong (Inlines t)
   -- ^ Hyperlink: visible link text (sequence of inlines), destination, title
-  | Link (Inlines t) t (Maybe t) -- TODO: special types
+  | Link (Inlines t) LinkRef (Maybe t) -- TODO: special types
   -- ^ Image hyperlink: image description, destination, title
-  | Image (Inlines t) t (Maybe t) -- TODO: special types
+  | Image (Inlines t) LinkRef (Maybe t) -- TODO: special types
   -- ^ Inline Raw HTML tag
   -- ^ A regular linebreak. A conforming renderer may render a soft
   --   line break in HTML either as line break or as a space.

@@ -34,12 +34,13 @@ import           Data.String                    ( IsString(..) )
 import           GHC.Generics                   ( Generic )
 import           Data.Text                      ( Text )
 import           Test.QuickCheck
+import qualified Data.List                                    as L
 import           Test.QuickCheck.Arbitrary.ADT
 
 -- | A Document
 newtype Doc t = Doc (Blocks t)
   deriving ( Show, Read, Eq, Typeable, Data, Generic, Functor, Foldable, Traversable)
-instance Arbitrary t => Arbitrary (Doc t) where
+instance (Eq t, Arbitrary t) => Arbitrary (Doc t) where
     arbitrary = genericArbitrary
 
 instance NFData t => NFData (Doc t)
@@ -64,7 +65,7 @@ data Block t -- ^ Thematic break
   deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable
            , NFData)
 
-instance Arbitrary t => Arbitrary (Block t) where
+instance (Eq t, Arbitrary t) => Arbitrary (Block t) where
     arbitrary = oneof
         [ pure ThematicBreak
         , Heading <$> arbitrary <*> scaleDown arbitrary
@@ -154,26 +155,40 @@ data Inline t
   -- ^ Strongly emphasized text (a sequence of inlines)
   | Strong (Inlines t)
   -- ^ Hyperlink: visible link text (sequence of inlines), destination, title
-  | Link (Inlines t) LinkRef (Maybe t) -- TODO: special types
-  -- ^ Image hyperlink: image description, destination, title
+  | Link (Inlines t) LinkRef (Maybe t)
+  -- ^ FIXME: Not sure how the `Maybe t` is supposed to work. Seems it should be part of
+  -- LinkRef.
   | Image (Inlines t) LinkRef (Maybe t) -- TODO: special types
-  -- ^ Inline Raw HTML tag
+  -- ^ Image hyperlink: image description, destination, title
+  | SoftBreak
   -- ^ A regular linebreak. A conforming renderer may render a soft
   --   line break in HTML either as line break or as a space.
-  | SoftBreak
+  | HardBreak
   -- ^ A line break that is marked as hard (either with spaces or
   --   backslash, see the spec for details). In html it would be rendered
   --   as @<br />@
-  | HardBreak
   | Task TaskStatus (Inlines t) -- TODO: Add `Maybe Deadline`
   deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable, NFData)
 
-instance Arbitrary t => Arbitrary (Inline t) where
+instance {-# Overlapping #-} (Eq t, Arbitrary t) => Arbitrary (Inlines t) where
+    arbitrary = do
+        s <- L.dropWhileEnd isBreak . L.dropWhile isBreak <$> listOf1 arbitrary
+        if null s then arbitrary else pure $ fromList s
+
+isBreak :: Eq t => Inline t -> Bool
+isBreak = flip elem [SoftBreak, HardBreak]
+
+arbitraryInlineNoBreak :: (Eq t, Arbitrary t) => Gen (Inline t)
+arbitraryInlineNoBreak = do
+    s <- arbitrary
+    if isBreak s then arbitraryInlineNoBreak else pure s
+
+instance (Eq t, Arbitrary t) => Arbitrary (Inline t) where
     arbitrary = oneof
         [ Str <$> arbitrary
         , Code <$> arbitrary
-        , Emph . fromList <$> scaleDown (listOf1 arbitrary)
-        , Strong . fromList <$> scaleDown (listOf1 arbitrary)
+        , Emph . fromList <$> scaleDown (listOf1 arbitraryInlineNoBreak)
+        , Strong . fromList <$> scaleDown (listOf1 arbitraryInlineNoBreak)
         , Link <$> scaleDown arbitrary <*> arbitrary <*> arbitrary
         , Image <$> scaleDown arbitrary <*> arbitrary <*> arbitrary
         , pure SoftBreak
@@ -183,7 +198,7 @@ instance Arbitrary t => Arbitrary (Inline t) where
 
       where
         scaleDown :: Gen a -> Gen a
-        scaleDown = scale (`div` 2)
+        scaleDown = scale (`div` 3)
 
 instance IsString t => IsString (Inline t) where
     fromString = Str . fromString
@@ -197,7 +212,11 @@ normalize inlines = case viewl inlines of
     Link i u t :< is -> Link (normalize i) u t <| normalize is
     Emph i :< is -> Emph (normalize i) <| normalize is
     Strong i :< is -> Strong (normalize i) <| normalize is
-    i :< is -> i <| normalize is
+    Task s i :< is -> Task s (normalize i) <| normalize is
+    Str t :< is -> Str t <| normalize is
+    Code t :< is -> Code t <| normalize is
+    HardBreak :< is -> HardBreak <| normalize is
+    SoftBreak :< is -> SoftBreak <| normalize is
     EmptyL -> mempty
 
 

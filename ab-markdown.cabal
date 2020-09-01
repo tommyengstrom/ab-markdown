@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 51080e7b83b1cdeda0a31eb5d8eaa63df7042c37a8064665beef2f381d4da45f
+-- hash: 9880d9ff93544a0bc74aafc0504ddb364f7e50020c9e2c5e5362c971c3eae095
 
 name:           ab-markdown
 version:        0.1.0
@@ -63,7 +63,7 @@ test-suite test
   hs-source-dirs:
       tests/
   default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies TypeApplications ViewPatterns
-  ghc-options: -Wall -Werror
+  ghc-options: -Wall -Werror -Wincomplete-patterns
   build-depends:
       QuickCheck
     , ab-markdown

@@ -14,7 +14,7 @@ import           Data.Aeson.Encode.Pretty
 import qualified Data.ByteString.Lazy.Char8                   as BL8
 import           Debug.Trace
 import           Control.Monad
--- import qualified Data.Sequence                                as Seq
+import qualified Data.Sequence                                as Seq
 -- import           Data.Aeson
 
 instance Arbitrary Text where
@@ -26,7 +26,7 @@ instance Arbitrary Text where
 data InlineTest = InlineTest
     { asDoc    :: Doc Text
     , reparsed :: Doc Text
-    , original :: Inline Text
+    , original :: Inlines Text
     , rendered :: Text
     }
     deriving (Show, Eq)
@@ -37,26 +37,28 @@ main = hspec $ do
         xit "Can parser question without answer" $ shouldBe False True
         xit "Can parser question with answer" $ shouldBe False True
     describe "Partial isomorphism `parse == parser . render . parse`" $ do
+        let checkInline :: Inline Text -> Gen Expectation
+            checkInline = checkInlines . pure
+
+            checkInlines :: Inlines Text -> Gen Expectation
+            checkInlines inlines = do
+                let doc  = Doc . pure . Paragraph @Text $ normalize inlines
+                    test = InlineTest { asDoc    = doc
+                                      , reparsed = parse [Normalize] (render doc)
+                                      , original = inlines
+                                      , rendered = render doc
+                                      }
+                unless (asDoc test == reparsed test) $ do
+                    traceM . BL8.unpack . encodePretty $ asDoc test
+                    traceM . BL8.unpack . encodePretty $ reparsed test
+                pure $ test `shouldSatisfy` (\x -> asDoc x == reparsed x)
+
+            simpleInline :: Gen (Inline Text)
+            simpleInline = Str <$> arbitrary @Text
+
+            simpleInlines :: Gen (Inlines Text)
+            simpleInlines = fmap pure simpleInline
         describe "Inline without recursion" $ do
-            let checkInline :: Inline Text -> Gen Expectation
-                checkInline inline = do
-                    let doc  = Doc . pure . Paragraph @Text $ pure inline
-                        test = InlineTest { asDoc    = doc
-                                          , reparsed = parse [Normalize] (render doc)
-                                          , original = inline
-                                          , rendered = render doc
-                                          }
-                    unless (asDoc test == reparsed test) $ do
-                        traceM . BL8.unpack . encodePretty $ asDoc test
-                        traceM . BL8.unpack . encodePretty $ reparsed test
-                    pure $ test `shouldSatisfy` (\x -> asDoc x == reparsed x)
-
-                simpleInline :: Gen (Inline Text)
-                simpleInline = Str <$> arbitrary @Text
-
-                simpleInlines :: Gen (Inlines Text)
-                simpleInlines = fmap pure simpleInline
-
             prop "Str" $ checkInline =<< Str <$> arbitrary @Text
             prop "Code" $ checkInline =<< Code <$> arbitrary @Text
             prop "Emph" $ checkInline =<< Emph . pure <$> simpleInline
@@ -66,20 +68,29 @@ main = hspec $ do
                 =<< Link
                 <$> simpleInlines
                 <*> arbitrary
-                <*> pure Nothing -- arbitrary
+                <*> pure Nothing -- arbitrary -- FIXME: What is this?
             prop "Image"
                 $   checkInline
                 =<< Image
                 <$> simpleInlines
                 <*> arbitrary
-                <*> pure Nothing --   arbitrary
-            xit "SoftBreak" $ shouldBe False True
-            -- prop "HardBreak" $ checkInline HardBreak -- Not sure this can be done at start of line
-            xit "Task" $ shouldBe False True
---        describe "Inline unlimited" $ do
---            prop "Emph" $ checkInline =<< Emph . Seq.fromList <$> resize
---                1
---                (listOf1 $ arbitrary @(Inline Text))
+                <*> pure Nothing --   arbitrary -- FIXME: What is this?
+            prop "SoftBreak" $ do
+                -- Breaks can only be between other stuff
+                before' <- simpleInline
+                after'  <- simpleInline
+                checkInlines $ Seq.fromList [before', SoftBreak, after']
+            prop "HardBreak" $ do
+                -- Breaks can only be between other stuff
+                before' <- simpleInline
+                after'  <- simpleInline
+                checkInlines $ Seq.fromList [before', HardBreak, after']
+            prop "Task" $ checkInline =<< Task <$> arbitrary <*> simpleInlines
+        xdescribe "Inline unlimited" $ do
+            -- I was naive to think I can get this to work. There are too many illegal
+            -- states that can be expressed in the internal structure. E.g.
+            -- `[Strong [Strong [Str ""]]]` and `[Hardbreak]`
+            prop "Arbitrary inlines" $ checkInlines =<< Seq.fromList <$> listOf1 arbitrary
         describe "Block" $ do
             xit "ThematicBreak" $ shouldBe False True
             xit "Heading" $ shouldBe False True

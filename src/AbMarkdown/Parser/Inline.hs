@@ -144,7 +144,8 @@ pTask opts = fmap singleton $ do
     status <- const Done <$> char 'x'
           <|> const Todo <$> char ' '
     _ <- char ']'
-    Task status <$> pInline opts
+    _ <- char ' '
+    Task status <$> pInlines opts
 
 -- [ Entities ] ----------------------------------------------------------------
 

@@ -39,8 +39,8 @@ renderInlines = foldMap renderInline
 renderInline :: Inline Text -> Text
 renderInline = \case
     Str    t             -> t
-    Emph   is            -> "*" <> renderInlines is <> "*"
-    Strong is            -> "**" <> renderInlines is <> "**"
+    Emph   is            -> "*" <> renderInlines is <> "* "
+    Strong is            -> "**" <> renderInlines is <> "** "
     Code   t             -> "`" <> t <> "`"
     Link  is dest _title -> "[" <> renderInlines is <> "](" <> unLinkRef dest <> ")"
     Image is dest _title -> "![" <> renderInlines is <> "](" <> unLinkRef dest <> ")"

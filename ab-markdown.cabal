@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9880d9ff93544a0bc74aafc0504ddb364f7e50020c9e2c5e5362c971c3eae095
+-- hash: 385b4c290ed00d3cd5cdbceed0143c7c68411e39945a1e9a00a9ccd4b60fef2b
 
 name:           ab-markdown
 version:        0.1.0
@@ -53,6 +53,7 @@ library
     , quickcheck-arbitrary-adt
     , text
     , transformers
+    , unordered-containers
   default-language: Haskell2010
 
 test-suite test
@@ -80,4 +81,5 @@ test-suite test
     , quickcheck-arbitrary-adt
     , text
     , transformers
+    , unordered-containers
   default-language: Haskell2010

@@ -36,10 +36,13 @@ import           Data.Text                      ( Text )
 import           Test.QuickCheck
 import qualified Data.List                                    as L
 import           Test.QuickCheck.Arbitrary.ADT
+import           Data.Aeson
+import qualified Data.HashMap.Strict                          as HM
 
 -- | A Document
 newtype Doc t = Doc (Blocks t)
-  deriving ( Show, Read, Eq, Typeable, Data, Generic, Functor, Foldable, Traversable)
+  deriving stock ( Show, Read, Eq, Typeable, Data, Generic, Functor, Foldable, Traversable)
+  deriving anyclass (ToJSON, FromJSON)
 instance (Eq t, Arbitrary t) => Arbitrary (Doc t) where
     arbitrary = genericArbitrary
 
@@ -63,7 +66,13 @@ data Block t -- ^ Thematic break
   | Quote (Blocks t) -- ^ Block Quote (a quoted sequence of blocks)
   | List ListType Bool (Seq (Blocks t)) -- ^ List: Type of the list, tightness, a sequnce of blocks (list item)
   deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable
-           , NFData)
+           , FromJSON, NFData)
+
+instance ToJSON t => ToJSON (Block t) where
+    toJSON = \case
+        ThematicBreak ->
+            Object $ HM.fromList [("tag", String "ThematicBreak"), ("contents", Null)]
+        a -> genericToJSON defaultOptions a
 
 instance (Eq t, Arbitrary t) => Arbitrary (Block t) where
     arbitrary = oneof
@@ -83,7 +92,7 @@ instance (Eq t, Arbitrary t) => Arbitrary (Block t) where
 data TaskStatus
     = Todo
     | Done
-    deriving (Show, Eq, Ord, Read, Typeable, NFData, Data, Generic)
+    deriving (Show, Eq, Ord, Read, Typeable, NFData, Data, Generic, ToJSON, FromJSON)
 
 instance Arbitrary TaskStatus where
     arbitrary = genericArbitrary
@@ -91,7 +100,7 @@ instance Arbitrary TaskStatus where
 data Language
     = Unknown Text
     | Haskell
-    deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
+    deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, ToJSON, FromJSON)
 instance Arbitrary Language where
     arbitrary = elements [Haskell, Unknown "elm", Unknown "julia"]
 
@@ -103,7 +112,7 @@ data HeadingLevel
   | Heading5
   | Heading6
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, ToJSON, FromJSON)
 instance Arbitrary HeadingLevel where
     arbitrary = genericArbitrary
 
@@ -111,7 +120,7 @@ data ListType
   = Ordered Delimiter Int
   | Bullet BulletMarker
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, ToJSON, FromJSON)
 instance Arbitrary ListType where
     arbitrary = genericArbitrary
 
@@ -120,7 +129,7 @@ data Delimiter
   = Period
   | Paren
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, ToJSON, FromJSON)
 instance Arbitrary Delimiter where
     arbitrary = genericArbitrary
 
@@ -129,16 +138,17 @@ data BulletMarker
   | Plus     -- ^ @+@
   | Asterisk -- ^ @*@
   deriving
-    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData)
+    (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, ToJSON, FromJSON)
 instance Arbitrary BulletMarker where
     arbitrary = genericArbitrary
 
 type Inlines t = Seq (Inline t)
 
 newtype LinkRef = LinkRef
-    {unLinkRef :: Text
-    } deriving (Show, Read, Eq, Ord, Typeable, Data, Generic)
-    deriving newtype (IsString, NFData)
+    { unLinkRef :: Text
+    }
+    deriving stock (Show, Read, Eq, Ord, Typeable, Data, Generic)
+    deriving newtype (IsString, NFData, ToJSON, FromJSON)
 
 instance Arbitrary LinkRef where
     arbitrary =
@@ -168,7 +178,8 @@ data Inline t
   --   backslash, see the spec for details). In html it would be rendered
   --   as @<br />@
   | Task TaskStatus (Inlines t) -- TODO: Add `Maybe Deadline`
-  deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable, NFData)
+  deriving ( Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable
+           , NFData, ToJSON, FromJSON)
 
 instance {-# Overlapping #-} (Eq t, Arbitrary t) => Arbitrary (Inlines t) where
     arbitrary = do

@@ -13,17 +13,17 @@ import           Data.Text                      ( Text )
 import           AbMarkdown.Syntax
 import           Data.Aeson
 
-deriveBoth defaultOptions ''Doc
+deriveElmDef defaultOptions ''Doc
 deriveElmDef defaultOptions ''Blocks
-deriveBoth defaultOptions ''Block
-deriveBoth defaultOptions ''HeadingLevel
-deriveBoth defaultOptions ''Language
-deriveBoth defaultOptions ''ListType
-deriveBoth defaultOptions ''Delimiter
-deriveBoth defaultOptions ''BulletMarker
-deriveBoth defaultOptions ''Inline
-deriveBoth defaultOptions ''TaskStatus
-deriveBoth defaultOptions ''LinkRef
+deriveElmDef defaultOptions ''Block
+deriveElmDef defaultOptions ''HeadingLevel
+deriveElmDef defaultOptions ''Language
+deriveElmDef defaultOptions ''ListType
+deriveElmDef defaultOptions ''Delimiter
+deriveElmDef defaultOptions ''BulletMarker
+deriveElmDef defaultOptions ''Inline
+deriveElmDef defaultOptions ''TaskStatus
+deriveElmDef defaultOptions ''LinkRef
 deriveElmDef defaultOptions ''Inlines
 
 

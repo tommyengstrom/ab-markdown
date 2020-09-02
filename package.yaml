@@ -32,6 +32,7 @@ dependencies:
 - control-bool
 - deepseq
 - elm-bridge
+- unordered-containers
 - html5-entity >=0.2.0.1
 - text
 - transformers

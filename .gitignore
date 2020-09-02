@@ -1,4 +1,3 @@
 .stack-work
-comark-syntax/comark-syntax.cabal
 stack.yaml.lock
 dist/

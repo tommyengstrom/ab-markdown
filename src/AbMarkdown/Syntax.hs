@@ -179,7 +179,17 @@ data Inline t
   --   as @<br />@
   | Task TaskStatus (Inlines t) -- TODO: Add `Maybe Deadline`
   deriving ( Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable
-           , NFData, ToJSON, FromJSON)
+           , NFData, FromJSON)
+
+-- | FIXME: This is due to using the broken elm generator. Aeson used to do thing like in
+-- 2016...
+instance ToJSON t => ToJSON (Inline t) where
+    toJSON = \case
+        SoftBreak ->
+            Object $ HM.fromList [("tag", String "SoftBreak"), ("contents", Null)]
+        HardBreak ->
+            Object $ HM.fromList [("tag", String "HardBreak"), ("contents", Null)]
+        a -> genericToJSON defaultOptions a
 
 instance {-# Overlapping #-} (Eq t, Arbitrary t) => Arbitrary (Inlines t) where
     arbitrary = do

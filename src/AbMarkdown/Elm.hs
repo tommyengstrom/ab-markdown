@@ -52,6 +52,7 @@ main = do
             , DefineElm (Proxy @Language)
             , DefineElm (Proxy @ListType)
             , DefineElm (Proxy @Delimiter)
+            , DefineElm (Proxy @LinkRef)
             , DefineElm (Proxy @BulletMarker)
             , DefineElm (Proxy @(Inline Text))
             , DefineElm (Proxy @(Inlines Text))

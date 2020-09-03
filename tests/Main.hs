@@ -7,13 +7,9 @@ import           AbMarkdown.Parser
 import           AbMarkdown.Render
 import           AbMarkdown.Syntax
 import           AbMarkdown.Elm                 ( )
-import           Test.QuickCheck
+import           Test.QuickCheck         hiding ( Ordered )
 import           Data.Text                      ( Text )
 import qualified Data.Text                                    as T
-import           Data.Aeson.Encode.Pretty
-import qualified Data.ByteString.Lazy.Char8                   as BL8
-import           Debug.Trace
-import           Control.Monad
 import qualified Data.Sequence                                as Seq
 -- import           Data.Aeson
 
@@ -28,6 +24,13 @@ data InlineTest = InlineTest
     , reparsed :: Doc Text
     , original :: Inlines Text
     , rendered :: Text
+    }
+    deriving (Show, Eq)
+
+data BlockTest = BlockTest
+    { reparsedBlocks :: Doc Text
+    , originalBlocks :: Doc Text
+    , renderedBlocks :: Text
     }
     deriving (Show, Eq)
 
@@ -48,9 +51,6 @@ main = hspec $ do
                                       , original = inlines
                                       , rendered = render doc
                                       }
-                unless (asDoc test == reparsed test) $ do
-                    traceM . BL8.unpack . encodePretty $ asDoc test
-                    traceM . BL8.unpack . encodePretty $ reparsed test
                 pure $ test `shouldSatisfy` (\x -> asDoc x == reparsed x)
 
             simpleInline :: Gen (Inline Text)
@@ -91,14 +91,49 @@ main = hspec $ do
             -- states that can be expressed in the internal structure. E.g.
             -- `[Strong [Strong [Str ""]]]` and `[Hardbreak]`
             prop "Arbitrary inlines" $ checkInlines =<< Seq.fromList <$> listOf1 arbitrary
+
+        let checkBlocks :: Blocks Text -> Gen Expectation
+            checkBlocks bs = do
+                let doc  = Doc bs
+                    test = BlockTest { reparsedBlocks = parse [Normalize] $ render doc
+                                     , originalBlocks = doc
+                                     , renderedBlocks = render doc
+                                     }
+                pure $ test `shouldSatisfy` (\x -> originalBlocks x == reparsedBlocks x)
         describe "Block" $ do
-            xit "ThematicBreak" $ shouldBe False True
-            xit "Heading" $ shouldBe False True
-            xit "CodeBlock" $ shouldBe False True
-            xit "Paragraph " $ shouldBe False True
-            xit "Question " $ shouldBe False True
-            xit "Quote " $ shouldBe False True
-            xit "List " $ shouldBe False True
-       -- prop "Full document works" $ do
-       --     doc <- arbitrary
-       --     pure $ doc `shouldBe` parse [] (render doc)
+            prop "ThematicBreak" $ do
+                checkBlocks $ Seq.fromList [ThematicBreak]
+            prop "Heading"
+                $   checkBlocks
+                .   pure
+                =<< Heading
+                <$> arbitrary
+                <*> simpleInlines
+            prop "CodeBlock"
+                $   checkBlocks
+                .   pure
+                =<< CodeBlock
+                <$> arbitrary
+                <*> (fmap (<> "\n") arbitrary)
+                -- FIXME: It fails to parse if ``` is not on it's own line. For some
+                -- reason it is parsed as a codeblcok but also contains the closing ```
+                -- in the text part of the constructor. Fix the parser!
+            prop "Paragraph " $ checkBlocks . pure =<< Paragraph <$> simpleInlines
+            prop "Question"
+                $   checkBlocks
+                .   pure
+                =<< Question
+                <$> fmap (pure . Paragraph) simpleInlines
+                <*> oneof [pure Nothing, fmap (Just . pure . Paragraph) simpleInlines]
+            prop "Quote "
+                $   checkBlocks
+                .   pure
+                =<< Quote
+                <$> fmap (pure . Paragraph) simpleInlines
+            prop "List"
+                $   checkBlocks
+                .   pure
+                =<< List
+                <$> arbitrary
+                <*> pure True -- arbitrary --
+                <*> fmap Seq.fromList (listOf1 $ fmap (pure . Paragraph) simpleInlines)

@@ -61,22 +61,22 @@ renderCodeBlock ml t = mconcat ["```", lang, "\n", t, "```"]
         Nothing          -> ""
 
 renderParagraph :: Inlines Text -> Text
-renderParagraph is = "\n" <> renderInlines is
+renderParagraph is = renderInlines is
 
 renderQuestion :: Blocks Text -> Maybe (Blocks Text) -> Text
 renderQuestion qBlocks mAnsBlocks = "\n" <> question <> answer
   where
-    question = T.replace "\n" "\n?? " (renderBlocks qBlocks)
+    question = T.unlines . fmap ("?? " <>) . T.lines $ renderBlocks qBlocks
     answer   = case mAnsBlocks of
         Nothing -> ""
-        Just bs -> T.replace "\n" "\n?= " (renderBlocks bs)
+        Just bs -> T.unlines . fmap ("?= " <>) . T.lines $ renderBlocks bs
 
 
 renderQuote :: Blocks Text -> Text
-renderQuote = T.intercalate "\n> " . T.splitOn "\n" . renderBlocks
+renderQuote = T.unlines . fmap ("> " <>) . T.lines . renderBlocks
 
 renderList :: ListType -> Bool -> (Seq (Blocks Text)) -> Text
-renderList lt _tight blocksSeq = T.intercalate "\n" . zipWith mkBlock [1 ..] $ toList
+renderList lt _tight blocksSeq = T.intercalate "\n" . zipWith mkBlock [0 ..] $ toList
     blocksSeq
   where
     mkBlock :: Int -> Blocks Text -> Text
@@ -84,8 +84,8 @@ renderList lt _tight blocksSeq = T.intercalate "\n" . zipWith mkBlock [1 ..] $ t
 
     marker :: Int -> Text
     marker i = case lt of
-        Ordered Period start -> "- " <> T.pack (show $ start + i) <> ". "
-        Ordered Paren  start -> "- (" <> T.pack (show $ start + i) <> ") "
+        Ordered Period start -> T.pack (show $ start + i) <> ". "
+        Ordered Paren  start -> T.pack (show $ start + i) <> ") "
         Bullet Minus         -> "- "
         Bullet Plus          -> "+ "
         Bullet Asterisk      -> "* "

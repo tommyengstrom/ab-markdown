@@ -33,7 +33,7 @@ import           Data.Sequence                  ( Seq
 import           Data.String                    ( IsString(..) )
 import           GHC.Generics                   ( Generic )
 import           Data.Text                      ( Text )
-import           Test.QuickCheck
+import           Test.QuickCheck         hiding ( Ordered )
 import qualified Data.List                                    as L
 import           Test.QuickCheck.Arbitrary.ADT
 import           Data.Aeson
@@ -122,7 +122,11 @@ data ListType
   deriving
     (Show, Read, Eq, Ord, Typeable, Data, Generic, NFData, ToJSON, FromJSON)
 instance Arbitrary ListType where
-    arbitrary = genericArbitrary
+    arbitrary =
+        oneof
+            [ Bullet <$> arbitrary
+            , Ordered <$> arbitrary <*> fmap getNonNegative arbitrary
+            ]
 
 
 data Delimiter

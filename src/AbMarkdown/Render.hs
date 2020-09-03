@@ -9,17 +9,17 @@ import           Data.Sequence                  ( Seq )
 import           Data.Foldable
 
 render :: Doc Text -> Text
-render (Doc bs) = renderBlocks bs
+render (Doc bs) = T.strip $ renderBlocks bs
 
 renderBlocks :: Foldable f => f (Block Text) -> Text
 renderBlocks = foldMap renderBlock
 
 renderBlock :: Block Text -> Text
 renderBlock = \case
-    ThematicBreak               -> "\n---\n"
-    Heading   hl    is          -> renderHeadingLevel hl <> renderInlines is
+    ThematicBreak               -> "---\n\n"
+    Heading   hl    is          -> renderHeadingLevel hl <> renderInlines is <> "\n\n"
     CodeBlock mLang t           -> renderCodeBlock mLang t
-    Paragraph is                -> renderParagraph is
+    Paragraph is                -> renderInlines is <> "\n\n"
     Question qBlocks mAnsBlocks -> renderQuestion qBlocks mAnsBlocks
     Quote bs                    -> renderQuote bs
     List lt tight bs            -> renderList lt tight bs
@@ -60,9 +60,6 @@ renderCodeBlock ml t = mconcat ["```", lang, "\n", t, "```"]
         Just (Unknown l) -> l
         Nothing          -> ""
 
-renderParagraph :: Inlines Text -> Text
-renderParagraph is = renderInlines is
-
 renderQuestion :: Blocks Text -> Maybe (Blocks Text) -> Text
 renderQuestion qBlocks mAnsBlocks = "\n" <> question <> answer
   where
@@ -80,7 +77,7 @@ renderList lt _tight blocksSeq = T.intercalate "\n" . zipWith mkBlock [0 ..] $ t
     blocksSeq
   where
     mkBlock :: Int -> Blocks Text -> Text
-    mkBlock i bs = marker i <> " " <> renderBlocks bs
+    mkBlock i bs = marker i <> " " <> T.strip (renderBlocks bs)
 
     marker :: Int -> Text
     marker i = case lt of

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 385b4c290ed00d3cd5cdbceed0143c7c68411e39945a1e9a00a9ccd4b60fef2b
+-- hash: 755bd4db23e57edfbb93f91b5b2d3c9660e69b6d48940e49339e1858f18a2ffe
 
 name:           ab-markdown
 version:        0.1.0
@@ -56,6 +56,30 @@ library
     , unordered-containers
   default-language: Haskell2010
 
+executable pprint_md
+  main-is: Main.hs
+  other-modules:
+      Paths_ab_markdown
+  hs-source-dirs:
+      app/pprint
+  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies TypeApplications ViewPatterns
+  ghc-options: -Wall -Werror
+  build-depends:
+      QuickCheck
+    , ab-markdown
+    , aeson
+    , base >=4.7 && <5.0
+    , containers
+    , control-bool
+    , deepseq
+    , elm-bridge
+    , html5-entity >=0.2.0.1
+    , quickcheck-arbitrary-adt
+    , text
+    , transformers
+    , unordered-containers
+  default-language: Haskell2010
+
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Main.hs
@@ -64,7 +88,7 @@ test-suite test
   hs-source-dirs:
       tests/
   default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies TypeApplications ViewPatterns
-  ghc-options: -Wall -Werror -Wincomplete-patterns
+  ghc-options: -Wall -Werror -Wall -Werror -Wincomplete-patterns
   build-depends:
       QuickCheck
     , ab-markdown

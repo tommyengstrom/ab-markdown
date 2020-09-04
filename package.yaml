@@ -38,14 +38,23 @@ dependencies:
 - transformers
 - QuickCheck
 - quickcheck-arbitrary-adt
+ghc-options:
+- -Wall
+- -Werror
 library:
   source-dirs:
     - src/
     - extended/
-  ghc-options: -Wall -Werror
   #  exposed-modules:
   #  - Comark.Syntax
   #  - Comark.Elm
+executables:
+  pprint_md:
+    main:                Main.hs
+    source-dirs:         app/pprint
+    dependencies:
+        - ab-markdown
+
 tests:
   test:
     main: Main.hs

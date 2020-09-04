@@ -56,7 +56,11 @@ main = hspec $ do
                         = "Some text\n\
                           \---\n\
                           \more text"
-                pendingWith "WTF is up with this? parses as a 2nd level headline!"
+                pendingWith
+                    "WTF is up with this? parses as a 2nd level headline!\n\
+                            \Turns out this is part of the spec: \n\
+                            \https://spec.commonmark.org/0.24/#setext-headings\n\
+                            \Pretty bad IMO."
                 b `shouldRerenderAs` b
         describe "CodeBlock" $ do
             it "Simple case is rerendered the same way" $ do

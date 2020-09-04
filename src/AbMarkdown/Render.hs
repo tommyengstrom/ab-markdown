@@ -12,14 +12,14 @@ render :: Doc Text -> Text
 render (Doc bs) = T.strip $ renderBlocks bs
 
 renderBlocks :: Foldable f => f (Block Text) -> Text
-renderBlocks = foldMap renderBlock
+renderBlocks = foldMap ((<> "\n\n") . renderBlock)
 
 renderBlock :: Block Text -> Text
 renderBlock = \case
-    ThematicBreak               -> "---\n\n"
-    Heading   hl    is          -> renderHeadingLevel hl <> renderInlines is <> "\n\n"
+    ThematicBreak               -> "---"
+    Heading   hl    is          -> renderHeadingLevel hl <> renderInlines is
     CodeBlock mLang t           -> renderCodeBlock mLang t
-    Paragraph is                -> renderInlines is <> "\n\n"
+    Paragraph is                -> renderInlines is
     Question qBlocks mAnsBlocks -> renderQuestion qBlocks mAnsBlocks
     Quote bs                    -> renderQuote bs
     List lt tight bs            -> renderList lt tight bs
@@ -52,7 +52,7 @@ renderInline = \case
 
 
 renderCodeBlock :: Maybe Language -> Text -> Text
-renderCodeBlock ml t = mconcat ["```", lang, "\n", t, "```"]
+renderCodeBlock ml t = mconcat ["```", lang, "\n", T.strip t, "\n```"]
   where
     lang :: Text
     lang = case ml of
@@ -61,12 +61,13 @@ renderCodeBlock ml t = mconcat ["```", lang, "\n", t, "```"]
         Nothing          -> ""
 
 renderQuestion :: Blocks Text -> Maybe (Blocks Text) -> Text
-renderQuestion qBlocks mAnsBlocks = "\n" <> question <> answer
+renderQuestion qBlocks mAns = question <> answer
   where
-    question = T.unlines . fmap ("?? " <>) . T.lines $ renderBlocks qBlocks
-    answer   = case mAnsBlocks of
-        Nothing -> ""
-        Just bs -> T.unlines . fmap ("?= " <>) . T.lines $ renderBlocks bs
+    question = prefixLines "?? " $ renderBlocks qBlocks
+    answer   = prefixLines "?= " $ maybe "" renderBlocks mAns
+
+    prefixLines :: Text -> Text -> Text
+    prefixLines prefix = T.unlines . fmap (prefix <>) . T.lines . T.strip
 
 
 renderQuote :: Blocks Text -> Text
@@ -78,7 +79,6 @@ renderList lt _tight blocksSeq = T.intercalate "\n" . zipWith mkBlock [0 ..] $ t
   where
     mkBlock :: Int -> Blocks Text -> Text
     mkBlock i bs = marker i <> " " <> T.strip (renderBlocks bs)
-
     marker :: Int -> Text
     marker i = case lt of
         Ordered Period start -> T.pack (show $ start + i) <> ". "

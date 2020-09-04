@@ -1,0 +1,68 @@
+name: ab-markdown
+version: '0.1.0'
+synopsis: Markdown with support for questions and other stuff
+description: Awebitious markdown
+category: Text
+author: Tommy Engström
+maintainer: tommy@succinct.se
+copyright: Tommy Engström, originally Konstantin Zudov
+license: BSD3
+default-extensions:
+- DeriveAnyClass
+- DeriveDataTypeable
+- DeriveFoldable
+- DeriveFunctor
+- DeriveGeneric
+- DeriveTraversable
+- DerivingStrategies
+- FlexibleInstances
+- GeneralizedNewtypeDeriving
+- LambdaCase
+- MultiWayIf
+- OverloadedStrings
+- ScopedTypeVariables
+- TupleSections
+- TypeFamilies
+- TypeApplications
+- ViewPatterns
+dependencies:
+- base >=4.7 && <5.0
+- aeson
+- containers
+- control-bool
+- deepseq
+- elm-bridge
+- unordered-containers
+- html5-entity >=0.2.0.1
+- text
+- transformers
+- QuickCheck
+- quickcheck-arbitrary-adt
+ghc-options:
+- -Wall
+- -Werror
+library:
+  source-dirs:
+    - src/
+    - extended/
+  #  exposed-modules:
+  #  - Comark.Syntax
+  #  - Comark.Elm
+executables:
+  pprint_md:
+    main:                Main.hs
+    source-dirs:         app/pprint
+    dependencies:
+        - ab-markdown
+
+tests:
+  test:
+    main: Main.hs
+    source-dirs: tests/
+    ghc-options: -Wall -Werror -Wincomplete-patterns
+    dependencies:
+    - base >=4.7
+    - hspec
+    - ab-markdown
+    - aeson-pretty
+    - bytestring

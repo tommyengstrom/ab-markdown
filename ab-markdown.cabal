@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 755bd4db23e57edfbb93f91b5b2d3c9660e69b6d48940e49339e1858f18a2ffe
+-- hash: 033a5d4da1b93f8a91dc5e9d3e219da3e1ff4dd7eb9717e3cba9869a52e0d039
 
 name:           ab-markdown
 version:        0.1.0
@@ -50,10 +50,13 @@ library
     , deepseq
     , elm-bridge
     , html5-entity >=0.2.0.1
+    , mtl
     , quickcheck-arbitrary-adt
+    , random
     , text
     , transformers
     , unordered-containers
+    , uuid
   default-language: Haskell2010
 
 executable pprint_md
@@ -74,10 +77,13 @@ executable pprint_md
     , deepseq
     , elm-bridge
     , html5-entity >=0.2.0.1
+    , mtl
     , quickcheck-arbitrary-adt
+    , random
     , text
     , transformers
     , unordered-containers
+    , uuid
   default-language: Haskell2010
 
 test-suite test
@@ -102,8 +108,11 @@ test-suite test
     , elm-bridge
     , hspec
     , html5-entity >=0.2.0.1
+    , mtl
     , quickcheck-arbitrary-adt
+    , random
     , text
     , transformers
     , unordered-containers
+    , uuid
   default-language: Haskell2010

@@ -303,10 +303,10 @@ processElts opts (C (Container ct cs) : rest) =
         -- This is just a hack, because answers are not allowed by themselfs.
     QuestionBlock -> case dropWhile isBlankLine rest of
         (C (Container AnswerBlock cs')): rest' ->
-            Question (processElts opts (toList cs))
+            Question () (processElts opts (toList cs))
                      (Just $ processElts opts (toList cs'))
                 <| processElts opts rest'
-        _  -> Question (processElts opts (toList cs)) Nothing <| processElts opts rest
+        _  -> Question () (processElts opts (toList cs)) Nothing <| processElts opts rest
 
 
     -- List item?  Gobble up following list items of the same type

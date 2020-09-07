@@ -17,6 +17,7 @@ module AbMarkdown.Syntax
     , normalize
     , LinkRef(..)
     , asText
+    , withUUID
     )
 where
 
@@ -39,6 +40,10 @@ import qualified Data.List                                    as L
 import           Test.QuickCheck.Arbitrary.ADT
 import           Data.Aeson
 import qualified Data.HashMap.Strict                          as HM
+import           Data.UUID                      ( UUID )
+import           System.Random
+import           Control.Monad.State
+
 
 -- | A Document
 newtype Doc id = Doc (Blocks id)
@@ -48,6 +53,46 @@ instance (Eq id, Arbitrary id) => Arbitrary (Doc id) where
     arbitrary = genericArbitrary
 
 instance NFData id => NFData (Doc id)
+
+withUUID :: Doc () -> Doc UUID
+withUUID doc = fst $ runState (traverse addUUID doc) (mkStdGen seed)
+  where
+    addUUID :: () -> State StdGen UUID
+    addUUID () = do
+        gen <- get
+        let (uuid, gen') = random gen
+        put gen'
+        pure uuid
+
+
+    seed :: Int
+    seed = case doc of
+        Doc bs -> sum $ fmap blockseed bs
+
+    blockseed :: Block () -> Int
+    blockseed = \case
+        ThematicBreak   -> 1
+        Heading   _ is  -> sum $ fmap inlineseed is
+        CodeBlock _ t   -> T.length t
+        Paragraph is    -> sum $ fmap inlineseed is
+        Question () _ _ -> 1 -- ^ Don't count things with id to allow concurrent updates
+        Quote bs        -> sum $ fmap blockseed bs
+        List _ _ bs     -> sum $ fmap (sum . fmap blockseed) bs
+
+    inlineseed :: Inline () -> Int
+    inlineseed = \case
+        Str    t       -> T.length t
+        Code   t       -> T.length t
+        Emph   is      -> sum $ fmap inlineseed is
+        Strong is      -> sum $ fmap inlineseed is
+        Link  is ref _ -> sum (fmap inlineseed is) + linkRefseed ref
+        Image is ref _ -> sum (fmap inlineseed is) + linkRefseed ref
+        SoftBreak      -> 1
+        HardBreak      -> 1
+        Task () _ _    -> 1 -- ^ Don't count things with id to allow concurrent updates
+    linkRefseed :: LinkRef -> Int
+    linkRefseed = T.length . unLinkRef
+
 
 instance Semigroup (Doc id) where
     (Doc bs1) <> (Doc bs2) = Doc (bs1 <> bs2)
@@ -63,7 +108,7 @@ data Block id
   | Heading HeadingLevel (Inlines id)
   | CodeBlock (Maybe Language) Text
   | Paragraph (Inlines id)
-  | Question (Blocks id) (Maybe (Blocks id))
+  | Question id (Blocks id) (Maybe (Blocks id))
   | Quote (Blocks id) -- ^ Block Quote (a quoted sequence of blocks)
   | List ListType Bool (Seq (Blocks id)) -- ^ List: Type of the list, tightness, a sequnce of blocks (list item)
   deriving (Show, Read, Eq, Ord, Typeable, Data, Generic, Functor, Foldable, Traversable
@@ -81,7 +126,7 @@ instance (Eq id, Arbitrary id) => Arbitrary (Block id) where
         , Heading <$> arbitrary <*> scaleDown arbitrary
         , CodeBlock <$> arbitrary <*> arbitraryText
         , Paragraph <$> scaleDown arbitrary
-        , Question <$> scaleDown arbitrary <*> scaleDown arbitrary
+        , Question <$> arbitrary <*> scaleDown arbitrary <*> scaleDown arbitrary
         , Quote <$> scaleDown arbitrary
         , List <$> arbitrary <*> arbitrary <*> scaleDown arbitrary
         ]

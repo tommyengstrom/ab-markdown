@@ -16,13 +16,13 @@ renderBlocks = foldMap ((<> "\n\n") . renderBlock)
 
 renderBlock :: Block id -> Text
 renderBlock = \case
-    ThematicBreak               -> "---"
-    Heading   hl    is          -> renderHeadingLevel hl <> renderInlines is
-    CodeBlock mLang t           -> renderCodeBlock mLang t
-    Paragraph is                -> renderInlines is
-    Question qBlocks mAnsBlocks -> renderQuestion qBlocks mAnsBlocks
-    Quote bs                    -> renderQuote bs
-    List lt tight bs            -> renderList lt tight bs
+    ThematicBreak                   -> "---"
+    Heading   hl    is              -> renderHeadingLevel hl <> renderInlines is
+    CodeBlock mLang t               -> renderCodeBlock mLang t
+    Paragraph is                    -> renderInlines is
+    Question _id qBlocks mAnsBlocks -> renderQuestion qBlocks mAnsBlocks
+    Quote bs                        -> renderQuote bs
+    List lt tight bs                -> renderList lt tight bs
 
 renderHeadingLevel :: HeadingLevel -> Text
 renderHeadingLevel = \case

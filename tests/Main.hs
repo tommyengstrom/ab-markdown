@@ -148,7 +148,7 @@ main = hspec $ do
                   prop "Question"
                       $   checkBlocks
                       .   pure
-                      =<< Question
+                      =<< Question ()
                       <$> fmap (pure . Paragraph) simpleInlines
                       <*> oneof
                               [pure Nothing, fmap (Just . pure . Paragraph) simpleInlines]

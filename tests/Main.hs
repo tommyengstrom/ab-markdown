@@ -20,16 +20,16 @@ instance Arbitrary Text where
         bogusWord = fmap T.pack . listOf1 $ elements ['a' .. 'z']
 
 data InlineTest = InlineTest
-    { asDoc    :: Doc Text
-    , reparsed :: Doc Text
-    , original :: Inlines Text
+    { asDoc    :: Doc ()
+    , reparsed :: Doc ()
+    , original :: Inlines ()
     , rendered :: Text
     }
     deriving (Show, Eq)
 
 data BlockTest = BlockTest
-    { reparsedBlocks :: Doc Text
-    , originalBlocks :: Doc Text
+    { reparsedBlocks :: Doc ()
+    , originalBlocks :: Doc ()
     , renderedBlocks :: Text
     }
     deriving (Show, Eq)
@@ -116,7 +116,7 @@ main = hspec $ do
                       before' <- simpleInline
                       after'  <- simpleInline
                       checkInlines $ Seq.fromList [before', HardBreak, after']
-                  prop "Task" $ checkInline =<< Task <$> arbitrary <*> simpleInlines
+                  prop "Task" $ checkInline =<< Task () <$> arbitrary <*> simpleInlines
               xdescribe "Inline unlimited" $ do
                   -- I was naive to think I can get this to work. There are too many illegal
                   -- states that can be expressed in the internal structure. E.g.
@@ -171,7 +171,7 @@ shouldRerenderAs before' after' = do
     let rerendered = render $ parse [Normalize] before'
     rerendered `shouldBe` after'
 
-checkBlocks :: Blocks Text -> Gen Expectation
+checkBlocks :: Blocks () -> Gen Expectation
 checkBlocks bs = do
     let doc  = Doc bs
         test = BlockTest { reparsedBlocks = parse [Normalize] $ render doc
@@ -179,12 +179,12 @@ checkBlocks bs = do
                          , renderedBlocks = render doc
                          }
     pure $ test `shouldSatisfy` (\x -> originalBlocks x == reparsedBlocks x)
-checkInline :: Inline Text -> Gen Expectation
+checkInline :: Inline () -> Gen Expectation
 checkInline = checkInlines . pure
 
-checkInlines :: Inlines Text -> Gen Expectation
+checkInlines :: Inlines () -> Gen Expectation
 checkInlines inlines = do
-    let doc  = Doc . pure . Paragraph @Text $ normalize inlines
+    let doc  = Doc . pure . Paragraph $ normalize inlines
         test = InlineTest { asDoc    = doc
                           , reparsed = parse [Normalize] (render doc)
                           , original = inlines
@@ -192,8 +192,8 @@ checkInlines inlines = do
                           }
     pure $ test `shouldSatisfy` (\x -> asDoc x == reparsed x)
 
-simpleInline :: Gen (Inline Text)
+simpleInline :: Gen (Inline ())
 simpleInline = Str <$> arbitrary @Text
 
-simpleInlines :: Gen (Inlines Text)
+simpleInlines :: Gen (Inlines ())
 simpleInlines = fmap pure simpleInline

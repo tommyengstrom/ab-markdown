@@ -7,7 +7,6 @@ import           Test.Hspec.QuickCheck
 import           AbMarkdown.Parser
 import           AbMarkdown.Render
 import           AbMarkdown.Syntax
-import           AbMarkdown.Elm                 ( )
 import           Test.QuickCheck         hiding ( Ordered )
 import           Data.Text                      ( Text )
 import qualified Data.Text                                    as T
@@ -62,7 +61,7 @@ main = hspec $ do
                     "WTF is up with this? parses as a 2nd level headline!\n\
                             \Turns out this is part of the spec: \n\
                             \https://spec.commonmark.org/0.24/#setext-headings\n\
-                            \Pretty bad IMO."
+                            \Pretty bad IMO. I should probably just drop it."
                 b `shouldRerenderAs` b
         describe "CodeBlock" $ do
             it "Simple case is rerendered the same way" $ do
@@ -119,14 +118,13 @@ main = hspec $ do
                       after'  <- simpleInline
                       checkInlines [before', HardBreak, after']
                   prop "Task" $ checkInline =<< Task () <$> arbitrary <*> simpleInlines
-              xdescribe "Inline unlimited" $ do
+              describe "Inline unlimited" $ do
                   -- I was naive to think I can get this to work. There are too many illegal
                   -- states that can be expressed in the internal structure. E.g.
                   -- `[Strong [Strong [Str ""]]]` and `[Hardbreak]`
-                  prop "Arbitrary inlines"
-                      $   checkInlines
-                      =<< Seq.fromList
-                      <$> listOf1 arbitrary
+                  prop "Arbitrary inlines" $ do
+                      pendingWith "This is not going to work with current representation"
+                      --checkInlines =<< Seq.fromList <$> listOf1 arbitrary
 
               describe "Block" $ do
                   prop "ThematicBreak" $ do

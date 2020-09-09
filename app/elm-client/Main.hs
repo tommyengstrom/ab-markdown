@@ -46,24 +46,33 @@ main = do
     writeFile (outputFolder </> "Markdown.elm") elmClient
     when writeTests $ do
         elmTests <- mkElmTests
-        writeFile (outputFolder </> "Tests.elm") elmTests
+        writeFile (outputFolder </> "MarkdownTests.elm") elmTests
 
 
 mkElmTests :: IO String
-mkElmTests = (describe <>) <$> tests
+mkElmTests = ((imports <> describe) <>) <$> tests
   where
+    imports
+        = "module MarkdownTests exposing (..)\n\
+        \import Expect exposing (Expectation)\n\
+        \import Fuzz exposing (Fuzzer, int, list, string)\n\
+        \import Json.Decode as D\n\
+        \import Markdown exposing (..)\n\
+        \import Test exposing (..)\n"
+
     describe
-        = "suite : Test\
+        = "suite : Test\n\
           \suite =\
           \    describe \"AbMarkdown Elm client\""
 
     tests = do
         samples <- fmap (fmap withUUID . mconcat) $ do
             sequence -- start with some smaller tests
-                     [replicateM 10 $ generate (resize 1 $ arbitrary @(Doc ()))
-               -- , replicateM 30 $ generate (resize 3 $ arbitrary @(Doc ()))
-               -- , replicateM 60 $ generate (resize 6 $ arbitrary @(Doc ()))
-                                                                               ]
+                [ replicateM 50 $ generate (resize 0 $ arbitrary @(Doc ()))
+                , replicateM 50 $ generate (resize 1 $ arbitrary @(Doc ()))
+               -- , replicateM 50 $ generate (resize 3 $ arbitrary @(Doc ()))
+               -- , replicateM 50 $ generate (resize 6 $ arbitrary @(Doc ()))
+                ]
 
         pure
             $  "\n        ["
@@ -76,7 +85,7 @@ mkElmTests = (describe <>) <$> tests
             <> show i
             <> "\" <| \
         \ \\_ -> Expect.equal (Result.map (always ()) <| \
-        \ D.decodeString decodeDoc "
+        \ D.decodeString (jsonDecDoc D.string) "
             <> show (encode d)
             <> ") (Ok ())"
 
@@ -84,20 +93,18 @@ mkElmTests = (describe <>) <$> tests
 elmClient :: String
 elmClient = elmImports <> elmDefs
   where
-    elmImports =
-        unlines
-                [ moduleHeader Elm0p18 "Markdown"
-                , ""
-                , "import Json.Decode"
-                , "import Json.Encode exposing (Value)"
-                , "-- The following module comes from bartavelle/json-helpers"
-                , "import Json.Helpers exposing (..)"
-                , "import Dict exposing (Dict)"
-                , "import Set exposing (Set)"
-                , ""
-                , ""
-                ]
-            ++ elmDefs
+    elmImports = unlines
+        [ moduleHeader Elm0p18 "Markdown"
+        , ""
+        , "import Json.Decode"
+        , "import Json.Encode exposing (Value)"
+        , "-- The following module comes from bartavelle/json-helpers"
+        , "import Json.Helpers exposing (..)"
+        , "import Dict exposing (Dict)"
+        , "import Set exposing (Set)"
+        , ""
+        , ""
+        ]
     elmDefs = makeModuleContentWithAlterations
         alterations
         [ DefineElm (Proxy @(Block Text))

@@ -16,7 +16,6 @@ import           Control.Monad
 import           System.FilePath
 import           Test.QuickCheck
 import qualified Data.List                                    as L
-import           Data.UUID
 --import           Data.Traversable
 
 
@@ -30,7 +29,7 @@ deriveElmDef defaultOptions ''Delimiter
 deriveElmDef defaultOptions ''BulletMarker
 deriveElmDef defaultOptions ''Inline
 deriveElmDef defaultOptions ''TaskStatus
-deriveElmDef defaultOptions ''LinkRef
+deriveElmDef defaultOptions {unwrapUnaryRecords = True} ''LinkRef
 deriveElmDef defaultOptions ''Inlines
 
 
@@ -65,30 +64,41 @@ mkElmTests = ((imports <> describe) <>) <$> tests
           \suite =\
           \    describe \"AbMarkdown Elm client\""
 
+    tests :: IO String
     tests = do
-        samples <- fmap (fmap withUUID . mconcat) $ do
+        linkRefSamples <- replicateM 50 $ generate (resize 1 $ arbitrary @LinkRef)
+        docSamples     <- fmap (fmap withUUID . mconcat) $ do
             sequence -- start with some smaller tests
                 [ replicateM 50 $ generate (resize 0 $ arbitrary @(Doc ()))
                 , replicateM 50 $ generate (resize 1 $ arbitrary @(Doc ()))
-               -- , replicateM 50 $ generate (resize 3 $ arbitrary @(Doc ()))
-               -- , replicateM 50 $ generate (resize 6 $ arbitrary @(Doc ()))
+                , replicateM 50 $ generate (resize 3 $ arbitrary @(Doc ()))
+                , replicateM 50 $ generate (resize 6 $ arbitrary @(Doc ()))
+                , replicateM 50 $ generate (resize 10 $ arbitrary @(Doc ()))
                 ]
 
         pure
             $  "\n        ["
-            <> L.intercalate "\n        ," (zipWith mkTest [1 ..] samples)
+            <> L.intercalate
+                   "\n        ,"
+                   (  zipWith (mkTest "jsonDecDoc (D.string)") [1 ..] docSamples
+                   <> zipWith (mkTest "jsonDecLinkRef")        [1 ..] linkRefSamples
+                   )
             <> "\n        ]"
 
-    mkTest :: Int -> Doc UUID -> String
-    mkTest i d =
-        "test \"Parse test nr "
+
+    mkTest :: ToJSON a => String -> Int -> a -> String
+    mkTest decoder i a =
+        "test \""
+            <> decoder
+            <> ": parse test nr "
             <> show i
             <> "\" <| \
         \ \\_ -> Expect.equal (Result.map (always ()) <| \
-        \ D.decodeString (jsonDecDoc D.string) "
-            <> show (encode d)
+        \ D.decodeString ("
+            <> decoder
+            <> ") "
+            <> show (encode a)
             <> ") (Ok ())"
-
 
 elmClient :: String
 elmClient = elmImports <> elmDefs

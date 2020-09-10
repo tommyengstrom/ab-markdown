@@ -18,7 +18,7 @@ module AbMarkdown.Syntax
     , LinkRef(..)
     , asText
     , withUUID
-    , updateQuestion
+    , updateBlock
     , updateInline
     )
 where
@@ -95,8 +95,8 @@ withUUID doc = fst $ runState (traverse addUUID doc) (mkStdGen seed)
     linkRefseed :: LinkRef -> Int
     linkRefseed = T.length . unLinkRef
 
-updateQuestion :: UUID -> (Block UUID -> Block UUID) -> Doc UUID -> Doc UUID
-updateQuestion key f (Doc blocks) = Doc $ go blocks
+updateBlock :: UUID -> (Block UUID -> Block UUID) -> Doc UUID -> Doc UUID
+updateBlock key f (Doc blocks) = Doc $ go blocks
   where
     go :: Blocks UUID -> Blocks UUID
     go bs = case viewl bs of

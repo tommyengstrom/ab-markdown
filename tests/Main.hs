@@ -228,7 +228,7 @@ main = hspec $ do
                         ]
 
             getIds doc1 `shouldBe` getIds doc2
-    describe "updateQuestion" $ do
+    describe "updateBlock" $ do
         it "Can update Question block" $ do
             uuid1 <- randomIO
             let doc :: Doc UUID
@@ -242,7 +242,7 @@ main = hspec $ do
                     Question k _ _ -> Question k [Paragraph [Str "When?"]] Nothing
                     x              -> x
 
-            updateQuestion uuid1 update doc
+            updateBlock uuid1 update doc
                 `shouldBe` Doc
                                [ Paragraph [Str "hejsan"]
                                , Question uuid1 [Paragraph [Str "When?"]] Nothing

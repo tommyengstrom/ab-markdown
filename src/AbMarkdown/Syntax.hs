@@ -18,6 +18,7 @@ module AbMarkdown.Syntax
     , LinkRef(..)
     , asText
     , withUUID
+    , replaceBlock
     )
 where
 
@@ -92,6 +93,23 @@ withUUID doc = fst $ runState (traverse addUUID doc) (mkStdGen seed)
         Task () _ _    -> 1 -- ^ Don't count things with id to allow concurrent updates
     linkRefseed :: LinkRef -> Int
     linkRefseed = T.length . unLinkRef
+
+replaceBlock :: UUID -> Block UUID -> Doc UUID -> Doc UUID
+replaceBlock key newBlock (Doc blocks) = Doc $ go blocks
+  where
+    go :: Blocks UUID -> Blocks UUID
+    go bs = case viewl bs of
+        EmptyL                            -> mempty
+        ThematicBreak             :< rest -> pure ThematicBreak <> go rest
+        x@(Heading   _hl   _il  ) :< rest -> pure x <> go rest
+        x@(CodeBlock _lang _code) :< rest -> pure x <> go rest
+        x@(Paragraph _il        ) :< rest -> pure x <> go rest
+        Quote inneBs              :< rest -> pure (Quote $ go inneBs) <> go rest
+        List lt x ls              :< rest -> pure (List lt x $ fmap go ls) <> go rest
+        Question key' qBs mABs :< rest
+            | key' == key -> pure newBlock <> rest
+            | otherwise   -> pure (Question key' (go qBs) (fmap go mABs)) <> rest
+
 
 
 instance Semigroup (Doc id) where

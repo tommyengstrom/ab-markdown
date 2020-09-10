@@ -12,6 +12,8 @@ import           Data.Text                      ( Text )
 import qualified Data.Text                                    as T
 import qualified Data.Sequence                                as Seq
 import qualified Data.List                                    as L
+import           Data.UUID
+import           System.Random
 -- import           Data.Aeson
 
 instance Arbitrary Text where
@@ -226,6 +228,19 @@ main = hspec $ do
                         ]
 
             getIds doc1 `shouldBe` getIds doc2
+    describe "replaceBlock" $ do
+        it "Can replace Question block" $ do
+            uuid1 <- randomIO
+            let doc :: Doc UUID
+                doc =
+                    Doc
+                        [ Paragraph [Str "hejsan"]
+                        , Question uuid1 [Paragraph [Str "What?"]] Nothing
+                        ]
+                newBlock :: Block UUID
+                newBlock = Paragraph [Str "No longer a question!"]
+            replaceBlock uuid1 newBlock doc
+                `shouldSatisfy` (\(Doc bs) -> newBlock `elem` bs)
 
 
 

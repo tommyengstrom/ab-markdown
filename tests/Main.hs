@@ -228,8 +228,8 @@ main = hspec $ do
                         ]
 
             getIds doc1 `shouldBe` getIds doc2
-    describe "replaceBlock" $ do
-        it "Can replace Question block" $ do
+    describe "updateQuestion" $ do
+        it "Can update Question block" $ do
             uuid1 <- randomIO
             let doc :: Doc UUID
                 doc =
@@ -237,11 +237,34 @@ main = hspec $ do
                         [ Paragraph [Str "hejsan"]
                         , Question uuid1 [Paragraph [Str "What?"]] Nothing
                         ]
-                newBlock :: Block UUID
-                newBlock = Paragraph [Str "No longer a question!"]
-            replaceBlock uuid1 newBlock doc
-                `shouldSatisfy` (\(Doc bs) -> newBlock `elem` bs)
+                update :: Block a -> Block a
+                update = \case
+                    Question k _ _ -> Question k [Paragraph [Str "When?"]] Nothing
+                    x              -> x
 
+            updateQuestion uuid1 update doc
+                `shouldBe` Doc
+                               [ Paragraph [Str "hejsan"]
+                               , Question uuid1 [Paragraph [Str "When?"]] Nothing
+                               ]
+
+    describe "updateInline" $ do
+        it "Can check off task" $ do
+            uuid1 <- randomIO
+            let doc :: Doc UUID
+                doc = Doc
+                    [ Paragraph [Str "hejsan"]
+                    , Paragraph [Str "What?", Task uuid1 Todo [Str "Press this"]]
+                    ]
+                complete :: Inline a -> Inline a
+                complete = \case
+                    Task k _ il -> Task k Done il
+                    x           -> x
+
+            updateInline uuid1 complete doc `shouldBe` Doc
+                [ Paragraph [Str "hejsan"]
+                , Paragraph [Str "What?", Task uuid1 Done [Str "Press this"]]
+                ]
 
 
 shouldRerenderAs :: Text -> Text -> Expectation

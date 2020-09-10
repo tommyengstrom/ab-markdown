@@ -18,7 +18,8 @@ module AbMarkdown.Syntax
     , LinkRef(..)
     , asText
     , withUUID
-    , replaceBlock
+    , updateQuestion
+    , updateInline
     )
 where
 
@@ -94,8 +95,8 @@ withUUID doc = fst $ runState (traverse addUUID doc) (mkStdGen seed)
     linkRefseed :: LinkRef -> Int
     linkRefseed = T.length . unLinkRef
 
-replaceBlock :: UUID -> Block UUID -> Doc UUID -> Doc UUID
-replaceBlock key newBlock (Doc blocks) = Doc $ go blocks
+updateQuestion :: UUID -> (Block UUID -> Block UUID) -> Doc UUID -> Doc UUID
+updateQuestion key f (Doc blocks) = Doc $ go blocks
   where
     go :: Blocks UUID -> Blocks UUID
     go bs = case viewl bs of
@@ -106,9 +107,41 @@ replaceBlock key newBlock (Doc blocks) = Doc $ go blocks
         x@(Paragraph _il        ) :< rest -> pure x <> go rest
         Quote inneBs              :< rest -> pure (Quote $ go inneBs) <> go rest
         List lt x ls              :< rest -> pure (List lt x $ fmap go ls) <> go rest
-        Question key' qBs mABs :< rest
-            | key' == key -> pure newBlock <> rest
+        q@(Question key' qBs mABs) :< rest
+            | key' == key -> pure (f q) <> rest
             | otherwise   -> pure (Question key' (go qBs) (fmap go mABs)) <> rest
+
+
+updateInline :: UUID -> (Inline UUID -> Inline UUID) -> Doc UUID -> Doc UUID
+updateInline key f (Doc blocks) = Doc $ go blocks
+  where
+    go :: Blocks UUID -> Blocks UUID
+    go bs = case viewl bs of
+        EmptyL -> mempty
+        ThematicBreak :< rest -> pure ThematicBreak <> go rest
+        Heading hl il :< rest -> pure (Heading hl (goIL il)) <> go rest
+        x@(CodeBlock _lang _code) :< rest -> pure x <> go rest
+        Paragraph il :< rest -> pure (Paragraph (goIL il)) <> go rest
+        Quote inneBs :< rest -> pure (Quote $ go inneBs) <> go rest
+        List lt x ls :< rest -> pure (List lt x $ fmap go ls) <> go rest
+        Question key' qBs mABs :< rest ->
+            pure (Question key' (go qBs) (fmap go mABs)) <> rest
+
+    goIL :: Inlines UUID -> Inlines UUID
+    goIL inlines = case viewl inlines of
+        EmptyL               -> mempty
+        x@(Str  _)   :< rest -> pure x <> goIL rest
+        x@(Code _)   :< rest -> pure x <> goIL rest
+        Emph   il    :< rest -> pure (Emph $ goIL il) <> goIL rest
+        Strong il    :< rest -> pure (Strong $ goIL il) <> goIL rest
+        Link  il r t :< rest -> pure (Link (goIL il) r t) <> goIL rest
+        Image il r t :< rest -> pure (Image (goIL il) r t) <> goIL rest
+        SoftBreak    :< rest -> pure SoftBreak <> rest
+        HardBreak    :< rest -> pure HardBreak <> rest
+        t@(Task key' ts il) :< rest
+            | key' == key -> pure (f t) <> rest
+            | otherwise   -> pure (Task key' ts (goIL il)) <> goIL rest
+
 
 
 

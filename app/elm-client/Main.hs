@@ -104,7 +104,7 @@ elmClient :: String
 elmClient = elmImports <> elmDefs
   where
     elmImports = unlines
-        [ moduleHeader Elm0p18 "Markdown"
+        [ moduleHeader Elm0p19 "Markdown"
         , ""
         , "import Json.Decode"
         , "import Json.Encode exposing (Value)"

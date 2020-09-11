@@ -69,11 +69,12 @@ mkElmTests = ((imports <> describe) <>) <$> tests
         linkRefSamples <- replicateM 50 $ generate (resize 1 $ arbitrary @LinkRef)
         docSamples     <- fmap (fmap withUUID . mconcat) $ do
             sequence -- start with some smaller tests
-                [ replicateM 50 $ generate (resize 0 $ arbitrary @(Doc ()))
-                , replicateM 50 $ generate (resize 1 $ arbitrary @(Doc ()))
-                , replicateM 50 $ generate (resize 3 $ arbitrary @(Doc ()))
-                , replicateM 50 $ generate (resize 6 $ arbitrary @(Doc ()))
-                , replicateM 50 $ generate (resize 10 $ arbitrary @(Doc ()))
+                [ replicateM 100 $ generate (resize 0 $ arbitrary @(Doc ()))
+                , replicateM 100 $ generate (resize 1 $ arbitrary @(Doc ()))
+                , replicateM 100 $ generate (resize 3 $ arbitrary @(Doc ()))
+                , replicateM 100 $ generate (resize 6 $ arbitrary @(Doc ()))
+                , replicateM 100 $ generate (resize 10 $ arbitrary @(Doc ()))
+                , replicateM 100 $ generate (resize 20 $ arbitrary @(Doc ()))
                 ]
 
         pure

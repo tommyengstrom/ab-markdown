@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 755bd4db23e57edfbb93f91b5b2d3c9660e69b6d48940e49339e1858f18a2ffe
+-- hash: d789254e82b5e8de2ed1c38dde6d372f56de04b42ea95131d3ca5feaef5638f3
 
 name:           ab-markdown
 version:        0.1.0
@@ -19,7 +19,6 @@ build-type:     Simple
 
 library
   exposed-modules:
-      AbMarkdown.Elm
       AbMarkdown.Parser
       AbMarkdown.Parser.Inline
       AbMarkdown.Parser.Inline.EmphLink
@@ -39,7 +38,7 @@ library
   hs-source-dirs:
       src/
       extended/
-  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies TypeApplications ViewPatterns
+  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables DataKinds TypeOperators TupleSections TypeFamilies TypeApplications ViewPatterns
   ghc-options: -Wall -Werror
   build-depends:
       QuickCheck
@@ -50,19 +49,51 @@ library
     , deepseq
     , elm-bridge
     , html5-entity >=0.2.0.1
+    , mtl
     , quickcheck-arbitrary-adt
+    , random
     , text
     , transformers
     , unordered-containers
+    , uuid
   default-language: Haskell2010
 
-executable pprint_md
+executable gen-client
+  main-is: Main.hs
+  other-modules:
+      Paths_ab_markdown
+  hs-source-dirs:
+      app/elm-client
+  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables DataKinds TypeOperators TupleSections TypeFamilies TypeApplications ViewPatterns
+  ghc-options: -Wall -Werror
+  build-depends:
+      QuickCheck
+    , ab-markdown
+    , aeson
+    , base >=4.7 && <5.0
+    , containers
+    , control-bool
+    , deepseq
+    , elm-bridge
+    , filepath
+    , html5-entity >=0.2.0.1
+    , mtl
+    , optparse-generic
+    , quickcheck-arbitrary-adt
+    , random
+    , text
+    , transformers
+    , unordered-containers
+    , uuid
+  default-language: Haskell2010
+
+executable pprint
   main-is: Main.hs
   other-modules:
       Paths_ab_markdown
   hs-source-dirs:
       app/pprint
-  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies TypeApplications ViewPatterns
+  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables DataKinds TypeOperators TupleSections TypeFamilies TypeApplications ViewPatterns
   ghc-options: -Wall -Werror
   build-depends:
       QuickCheck
@@ -74,10 +105,13 @@ executable pprint_md
     , deepseq
     , elm-bridge
     , html5-entity >=0.2.0.1
+    , mtl
     , quickcheck-arbitrary-adt
+    , random
     , text
     , transformers
     , unordered-containers
+    , uuid
   default-language: Haskell2010
 
 test-suite test
@@ -87,7 +121,7 @@ test-suite test
       Paths_ab_markdown
   hs-source-dirs:
       tests/
-  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables TupleSections TypeFamilies TypeApplications ViewPatterns
+  default-extensions: DeriveAnyClass DeriveDataTypeable DeriveFoldable DeriveFunctor DeriveGeneric DeriveTraversable DerivingStrategies FlexibleInstances GeneralizedNewtypeDeriving LambdaCase MultiWayIf OverloadedStrings ScopedTypeVariables DataKinds TypeOperators TupleSections TypeFamilies TypeApplications ViewPatterns
   ghc-options: -Wall -Werror -Wall -Werror -Wincomplete-patterns
   build-depends:
       QuickCheck
@@ -102,8 +136,11 @@ test-suite test
     , elm-bridge
     , hspec
     , html5-entity >=0.2.0.1
+    , mtl
     , quickcheck-arbitrary-adt
+    , random
     , text
     , transformers
     , unordered-containers
+    , uuid
   default-language: Haskell2010

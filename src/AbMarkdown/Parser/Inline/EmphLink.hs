@@ -2,7 +2,6 @@
 -- | Code and data types for parsing emphasis and links
 module AbMarkdown.Parser.Inline.EmphLink where
 
-import           Data.Text                      ( Text )
 import qualified Data.Text                                    as Text
 
 import           AbMarkdown.Parser.Reference
@@ -27,7 +26,7 @@ data EmphDelim = EmphDelim
     }
     deriving (Show, Eq)
 
-unEmphDelim :: EmphDelim -> Inlines Text
+unEmphDelim :: EmphDelim -> Inlines ()
 unEmphDelim EmphDelim { emphIndicator, emphLength } =
     singleton
         . Str
@@ -40,11 +39,11 @@ data LinkOpen = LinkOpen
     { linkOpenerType :: OpenerType
     , linkActive     :: Bool
     , linkLabel      :: Maybe LinkText
-    , linkContent    :: Inlines Text
+    , linkContent    :: Inlines ()
     }
     deriving (Show, Eq)
 
-unLinkOpen :: LinkOpen -> Inlines Text
+unLinkOpen :: LinkOpen -> Inlines ()
 unLinkOpen l =
     case linkOpenerType l of
             LinkOpener  -> Str "["
@@ -52,12 +51,12 @@ unLinkOpen l =
         <| linkContent l
 
 data Token
-  = InlineToken (Inlines Text)
+  = InlineToken (Inlines ())
   | EmphDelimToken EmphDelim
   | LinkOpenToken LinkOpen
   deriving (Show, Eq)
 
-unToken :: Token -> Inlines Text
+unToken :: Token -> Inlines ()
 unToken (InlineToken    is) = is
 unToken (EmphDelimToken e ) = unEmphDelim e
 unToken (LinkOpenToken  l ) = unLinkOpen l
@@ -93,13 +92,13 @@ deactivate (LinkOpenToken l) =
     LinkOpenToken l { linkActive = linkOpenerType l == ImageOpener }
 deactivate t = t
 
-addInline :: DelimStack -> Inline Text -> DelimStack
+addInline :: DelimStack -> Inline () -> DelimStack
 addInline (viewr -> ts :> LinkOpenToken l) i =
     ts |> LinkOpenToken l { linkContent = linkContent l |> i }
 addInline (viewr -> ts :> InlineToken is) i = ts |> InlineToken (is |> i)
 addInline ts                              i = ts |> InlineToken (singleton i)
 
-addInlines :: DelimStack -> Inlines Text -> DelimStack
+addInlines :: DelimStack -> Inlines () -> DelimStack
 addInlines (viewr -> ts :> InlineToken is) i = ts |> InlineToken (is >< i)
 addInlines (viewr -> ts :> LinkOpenToken l) i =
     ts |> LinkOpenToken l { linkContent = linkContent l >< i }

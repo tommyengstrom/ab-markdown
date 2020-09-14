@@ -1,3 +1,6 @@
 .stack-work
 stack.yaml.lock
 dist/
+elm-stuff
+Markdown.elm
+MarkdownTests.elm

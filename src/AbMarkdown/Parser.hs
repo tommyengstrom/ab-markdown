@@ -34,7 +34,7 @@ import AbMarkdown.Syntax
 --
 --   At the moment no sanitizations are performed besides the ones defined
 --   in the spec.
-parse :: [ParserOption] -> Text -> Doc Text
+parse :: [ParserOption] -> Text -> Doc ()
 parse (parserOptions -> opts) text =
   Doc $ processDocument
       $ second extendRefmap
@@ -265,7 +265,7 @@ addContainer ct =
 -- Step 2
 
 -- Convert Document container and reference map into an ASText.
-processDocument :: (Container, ParserOptions) -> Blocks Text
+processDocument :: (Container, ParserOptions) -> Blocks ()
 processDocument (Container Document cs, opts) = processElts opts (toList cs)
 processDocument _ = error "top level container is not Document"
 
@@ -273,7 +273,7 @@ processDocument _ = error "top level container is not Document"
 -- This requires grouping text lines into paragraphs
 -- and list items into lists, handling blank lines,
 -- parsing inline contents of texts and resolving referencess.
-processElts :: ParserOptions -> [Elt] -> Blocks Text
+processElts :: ParserOptions -> [Elt] -> Blocks ()
 processElts _ [] = mempty
 processElts opts (L _lineNumber lf : rest) =
   case lf of
@@ -303,10 +303,10 @@ processElts opts (C (Container ct cs) : rest) =
         -- This is just a hack, because answers are not allowed by themselfs.
     QuestionBlock -> case dropWhile isBlankLine rest of
         (C (Container AnswerBlock cs')): rest' ->
-            Question (processElts opts (toList cs))
+            Question () (processElts opts (toList cs))
                      (Just $ processElts opts (toList cs'))
                 <| processElts opts rest'
-        _  -> Question (processElts opts (toList cs)) Nothing <| processElts opts rest
+        _  -> Question () (processElts opts (toList cs)) Nothing <| processElts opts rest
 
 
     -- List item?  Gobble up following list items of the same type

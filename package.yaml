@@ -21,6 +21,8 @@ default-extensions:
 - MultiWayIf
 - OverloadedStrings
 - ScopedTypeVariables
+- DataKinds
+- TypeOperators
 - TupleSections
 - TypeFamilies
 - TypeApplications
@@ -32,12 +34,15 @@ dependencies:
 - control-bool
 - deepseq
 - elm-bridge
-- unordered-containers
 - html5-entity >=0.2.0.1
-- text
-- transformers
 - QuickCheck
 - quickcheck-arbitrary-adt
+- text
+- transformers
+- unordered-containers
+- uuid
+- random
+- mtl
 ghc-options:
 - -Wall
 - -Werror
@@ -45,16 +50,20 @@ library:
   source-dirs:
     - src/
     - extended/
-  #  exposed-modules:
-  #  - Comark.Syntax
-  #  - Comark.Elm
 executables:
-  pprint_md:
+  pprint:
     main:                Main.hs
     source-dirs:         app/pprint
     dependencies:
         - ab-markdown
 
+  gen-client:
+    main:        Main.hs
+    source-dirs: app/elm-client
+    dependencies:
+        - ab-markdown
+        - optparse-generic
+        - filepath
 tests:
   test:
     main: Main.hs
@@ -66,3 +75,4 @@ tests:
     - ab-markdown
     - aeson-pretty
     - bytestring
+

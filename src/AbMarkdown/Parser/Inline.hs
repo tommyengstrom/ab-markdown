@@ -19,9 +19,6 @@ import           Data.Sequence
 import qualified Data.Sequence.Extended as Seq
 import           Data.Text              (Text)
 import qualified Data.Text              as Text
-import qualified Data.Text.Lazy         as Text.Lazy
-import qualified Data.Text.Lazy.Builder as Text.Lazy.Builder
-
 import AbMarkdown.Parser.Inline.EmphLink
 import AbMarkdown.Parser.Options         (ParserOptions(..))
 import AbMarkdown.Parser.Reference
@@ -31,25 +28,19 @@ import AbMarkdown.Syntax
 import Text.Html.Email.Validate
 import Text.Html.Entity
 
-parseInlines :: ParserOptions -> Text -> Inlines Text
+parseInlines :: ParserOptions -> Text -> Inlines ()
 parseInlines opts input =
   case runParser (pInlines opts <* endOfInput) input of
     Left e ->
       error $ "[INTERNAL ERROR]: parseInlines: " <> show e
     Right r
-      | _poNormalize opts -> normalizeInlines r
+      | _poNormalize opts -> normalize r
       | otherwise -> r
 
-normalizeInlines :: Inlines Text -> Inlines Text
-normalizeInlines =
-  fmap (fmap (Text.Lazy.toStrict . Text.Lazy.Builder.toLazyText))
-    . normalize
-    . fmap (fmap Text.Lazy.Builder.fromText)
-
-pInlines :: ParserOptions -> Parser (Inlines Text)
+pInlines :: ParserOptions -> Parser (Inlines ())
 pInlines = fmap msum . many . pInline
 
-pInline :: ParserOptions -> Parser (Inlines Text)
+pInline :: ParserOptions -> Parser (Inlines ())
 pInline opts =
   asum
     [ pText
@@ -74,13 +65,13 @@ parseLanguage t =
   where
     parser = pText <|> pBackslashed <|> pEntity
 
-str :: a -> Inlines a
+str :: Text -> Inlines ()
 str = singleton . Str
 
-pText :: Parser (Inlines Text)
+pText :: Parser (Inlines ())
 pText = str <$> takeWhile1 (not . isSpecial)
 
-pFallback :: Parser (Inlines Text)
+pFallback :: Parser (Inlines ())
 pFallback = str <$> (Text.singleton <$> satisfy isSpecial)
 
 isSpecial :: Char -> Bool
@@ -99,10 +90,10 @@ pSatisfy p = asum
   , guard (p '\\') *> char '\\'
   ]
 
-pBackslashed :: Parser (Inlines Text)
+pBackslashed :: Parser (Inlines ())
 pBackslashed = str <$> pBackslashedChar
 
-pHardbreak :: Parser (Inlines Text)
+pHardbreak :: Parser (Inlines ())
 pHardbreak =
   singleton HardBreak
     <$ asum [ void (char '\\'), spaceScape ] <* pLineEnding
@@ -112,7 +103,7 @@ pHardbreak =
       _ <- replicateM 2 (char ' ')  -- two spaces
       skipWhile (== ' ')       -- and more spaces (optionally)
 
-pSoftbreak :: Parser (Inlines Text)
+pSoftbreak :: Parser (Inlines ())
 pSoftbreak =
   discardOpt (char ' ')
     *> pLineEnding
@@ -121,7 +112,7 @@ pSoftbreak =
 
 -- [ Code ] --------------------------------------------------------------------
 
-pCode :: Parser (Inlines Text)
+pCode :: Parser (Inlines ())
 pCode = singleton <$> do
   startTicks <- backtickChunk
   let pEndTicks = string startTicks <* notFollowedBy (char '`')
@@ -138,18 +129,18 @@ pCode = singleton <$> do
     isCollapsableSpace = (== ' ') <||> isLineEnding
 
 
-pTask :: ParserOptions -> Parser (Inlines Text)
+pTask :: ParserOptions -> Parser (Inlines ())
 pTask opts = fmap singleton $ do
     _ <- char '['
     status <- const Done <$> char 'x'
           <|> const Todo <$> char ' '
     _ <- char ']'
     _ <- char ' '
-    Task status <$> pInlines opts
+    Task () status <$> pInlines opts
 
 -- [ Entities ] ----------------------------------------------------------------
 
-pEntity :: Parser (Inlines Text)
+pEntity :: Parser (Inlines ())
 pEntity = str <$> pEntityText
 
 pEntityText :: Parser Text
@@ -172,7 +163,7 @@ pEntityText = char '&' *> entityBody <* char ';'
       Text.singleton . chrSafe <$> hexadecimal
 
 -- [ Autolinks ] ---------------------------------------------------------------
-pAutolink :: Parser (Inlines Text)
+pAutolink :: Parser (Inlines ())
 pAutolink = char '<' *> (pUrl <|> pEmail) <* char '>'
     where pUrl = do
               scheme <- pScheme
@@ -289,7 +280,7 @@ pEmphTokens opts = do
       Just link <- pure $ _poLinkReferences opts ref
       pure $ singleton $ uncurry constr link
 
-pEmphLink :: ParserOptions -> Parser (Inlines Text)
+pEmphLink :: ParserOptions -> Parser (Inlines ())
 pEmphLink opts =
   foldMap unToken . processEmphTokens <$> pEmphTokens opts
 
@@ -328,7 +319,7 @@ processEmphToken stack token =
     matchOpening ch (EmphDelimToken d) = emphIndicator d == ch && emphCanOpen d
     matchOpening _ _ = False
 
-matchEmphStrings :: DelimStack -> EmphDelim -> EmphDelim -> Inlines Text -> DelimStack
+matchEmphStrings :: DelimStack -> EmphDelim -> EmphDelim -> Inlines () -> DelimStack
 matchEmphStrings stack opening closing content
   | emphIndicator opening == emphIndicator closing = if
      | emphLength closing == emphLength opening ->
@@ -348,7 +339,7 @@ matchEmphStrings stack opening closing content
      | otherwise -> stack
   | otherwise = stack
 
-emph :: Int -> Inlines Text -> Inlines Text
+emph :: Int -> Inlines () -> Inlines ()
 emph n content
   | n <= 0    = content
   | even n    = single Strong $ emph (n - 2) content

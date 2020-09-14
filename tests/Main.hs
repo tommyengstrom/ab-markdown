@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE OverloadedLists #-}
 module Main where
 
 import           Test.Hspec
@@ -6,11 +7,13 @@ import           Test.Hspec.QuickCheck
 import           AbMarkdown.Parser
 import           AbMarkdown.Render
 import           AbMarkdown.Syntax
-import           AbMarkdown.Elm                 ( )
 import           Test.QuickCheck         hiding ( Ordered )
 import           Data.Text                      ( Text )
 import qualified Data.Text                                    as T
 import qualified Data.Sequence                                as Seq
+import qualified Data.List                                    as L
+import           Data.UUID
+import           System.Random
 -- import           Data.Aeson
 
 instance Arbitrary Text where
@@ -20,16 +23,16 @@ instance Arbitrary Text where
         bogusWord = fmap T.pack . listOf1 $ elements ['a' .. 'z']
 
 data InlineTest = InlineTest
-    { asDoc    :: Doc Text
-    , reparsed :: Doc Text
-    , original :: Inlines Text
+    { asDoc    :: Doc ()
+    , reparsed :: Doc ()
+    , original :: Inlines ()
     , rendered :: Text
     }
     deriving (Show, Eq)
 
 data BlockTest = BlockTest
-    { reparsedBlocks :: Doc Text
-    , originalBlocks :: Doc Text
+    { reparsedBlocks :: Doc ()
+    , originalBlocks :: Doc ()
     , renderedBlocks :: Text
     }
     deriving (Show, Eq)
@@ -60,7 +63,7 @@ main = hspec $ do
                     "WTF is up with this? parses as a 2nd level headline!\n\
                             \Turns out this is part of the spec: \n\
                             \https://spec.commonmark.org/0.24/#setext-headings\n\
-                            \Pretty bad IMO."
+                            \Pretty bad IMO. I should probably just drop it."
                 b `shouldRerenderAs` b
         describe "CodeBlock" $ do
             it "Simple case is rerendered the same way" $ do
@@ -86,7 +89,7 @@ main = hspec $ do
                 b `shouldRerenderAs` b
 
 
-    modifyMaxSuccess (const 20)
+    modifyMaxSuccess (const 25)
         . describe "Partial isomorphism `parse == parser . render . parse`"
         $ do
               describe "Inline without recursion" $ do
@@ -110,25 +113,24 @@ main = hspec $ do
                       -- Breaks can only be between other stuff
                       before' <- simpleInline
                       after'  <- simpleInline
-                      checkInlines $ Seq.fromList [before', SoftBreak, after']
+                      checkInlines [before', SoftBreak, after']
                   prop "HardBreak" $ do
                       -- Breaks can only be between other stuff
                       before' <- simpleInline
                       after'  <- simpleInline
-                      checkInlines $ Seq.fromList [before', HardBreak, after']
-                  prop "Task" $ checkInline =<< Task <$> arbitrary <*> simpleInlines
-              xdescribe "Inline unlimited" $ do
+                      checkInlines [before', HardBreak, after']
+                  prop "Task" $ checkInline =<< Task () <$> arbitrary <*> simpleInlines
+              describe "Inline unlimited" $ do
                   -- I was naive to think I can get this to work. There are too many illegal
                   -- states that can be expressed in the internal structure. E.g.
                   -- `[Strong [Strong [Str ""]]]` and `[Hardbreak]`
-                  prop "Arbitrary inlines"
-                      $   checkInlines
-                      =<< Seq.fromList
-                      <$> listOf1 arbitrary
+                  prop "Arbitrary inlines" $ do
+                      pendingWith "This is not going to work with current representation"
+                      --checkInlines =<< Seq.fromList <$> listOf1 arbitrary
 
               describe "Block" $ do
                   prop "ThematicBreak" $ do
-                      checkBlocks $ Seq.fromList [ThematicBreak]
+                      checkBlocks [ThematicBreak]
                   prop "Heading"
                       $   checkBlocks
                       .   pure
@@ -148,7 +150,7 @@ main = hspec $ do
                   prop "Question"
                       $   checkBlocks
                       .   pure
-                      =<< Question
+                      =<< Question ()
                       <$> fmap (pure . Paragraph) simpleInlines
                       <*> oneof
                               [pure Nothing, fmap (Just . pure . Paragraph) simpleInlines]
@@ -166,12 +168,111 @@ main = hspec $ do
                       <*> fmap Seq.fromList
                                (listOf1 $ fmap (pure . Paragraph) simpleInlines)
 
+    describe "withUUID" $ do
+        let getIds :: Doc () -> [String]
+            getIds = foldMap (pure . show) . withUUID
+        it "Adds unique indices to questions and tasks" $ do
+            let doc :: Doc ()
+                doc = Doc
+                    [ Paragraph [Str "Hejsan"]
+                    , Question () [Paragraph [Str "What is the thing?"]]       Nothing
+                    , Question () [Paragraph [Str "What is the other thing?"]] Nothing
+                    , Paragraph [Task () Todo [Str "Do the thing"]]
+                    , Paragraph [Task () Todo [Str "Do the other thing"]]
+                    ]
+                result :: [String]
+                result = getIds doc
+            result `shouldMatchList` L.nub result
+
+        it "Generate the same different IDs when the content of a paragraph change" $ do
+            let doc1 :: Doc ()
+                doc1 = Doc
+                    [ Paragraph [Str "Hejsan"]
+                    , Question () [Paragraph [Str "What is the thing?"]] Nothing
+                    ]
+                doc2 :: Doc ()
+                doc2 = Doc
+                    [ Paragraph [Str "Hejsan!"]
+                    , Question () [Paragraph [Str "What is the thing?"]] Nothing
+                    ]
+
+            getIds doc1 `shouldNotBe` getIds doc2
+
+        it "Generate the same IDs when the content of a question change" $ do
+            let doc1 :: Doc ()
+                doc1 = Doc
+                    [ Paragraph [Str "Hejsan"]
+                    , Question () [Paragraph [Str "What is the thing?"]] Nothing
+                    ]
+                doc2 :: Doc ()
+                doc2 =
+                    Doc
+                        [ Paragraph [Str "Hejsan"]
+                        , Question () [Paragraph [Str "What is what?"]] Nothing
+                        ]
+
+            getIds doc1 `shouldBe` getIds doc2
+
+        it "Generate the same IDs when the content of a task change" $ do
+            let doc1 :: Doc ()
+                doc1 =
+                    Doc
+                        [ Paragraph [Str "Hejsan"]
+                        , Paragraph [Task () Todo [Str "Do the thing"]]
+                        ]
+                doc2 :: Doc ()
+                doc2 =
+                    Doc
+                        [ Paragraph [Str "Hejsan"]
+                        , Paragraph [Task () Todo [Str "Do the other thing"]]
+                        ]
+
+            getIds doc1 `shouldBe` getIds doc2
+    describe "updateBlock" $ do
+        it "Can update Question block" $ do
+            uuid1 <- randomIO
+            let doc :: Doc UUID
+                doc =
+                    Doc
+                        [ Paragraph [Str "hejsan"]
+                        , Question uuid1 [Paragraph [Str "What?"]] Nothing
+                        ]
+                update :: Block a -> Block a
+                update = \case
+                    Question k _ _ -> Question k [Paragraph [Str "When?"]] Nothing
+                    x              -> x
+
+            updateBlock uuid1 update doc
+                `shouldBe` Doc
+                               [ Paragraph [Str "hejsan"]
+                               , Question uuid1 [Paragraph [Str "When?"]] Nothing
+                               ]
+
+    describe "updateInline" $ do
+        it "Can check off task" $ do
+            uuid1 <- randomIO
+            let doc :: Doc UUID
+                doc = Doc
+                    [ Paragraph [Str "hejsan"]
+                    , Paragraph [Str "What?", Task uuid1 Todo [Str "Press this"]]
+                    ]
+                complete :: Inline a -> Inline a
+                complete = \case
+                    Task k _ il -> Task k Done il
+                    x           -> x
+
+            updateInline uuid1 complete doc `shouldBe` Doc
+                [ Paragraph [Str "hejsan"]
+                , Paragraph [Str "What?", Task uuid1 Done [Str "Press this"]]
+                ]
+
+
 shouldRerenderAs :: Text -> Text -> Expectation
 shouldRerenderAs before' after' = do
     let rerendered = render $ parse [Normalize] before'
     rerendered `shouldBe` after'
 
-checkBlocks :: Blocks Text -> Gen Expectation
+checkBlocks :: Blocks () -> Gen Expectation
 checkBlocks bs = do
     let doc  = Doc bs
         test = BlockTest { reparsedBlocks = parse [Normalize] $ render doc
@@ -179,12 +280,12 @@ checkBlocks bs = do
                          , renderedBlocks = render doc
                          }
     pure $ test `shouldSatisfy` (\x -> originalBlocks x == reparsedBlocks x)
-checkInline :: Inline Text -> Gen Expectation
+checkInline :: Inline () -> Gen Expectation
 checkInline = checkInlines . pure
 
-checkInlines :: Inlines Text -> Gen Expectation
+checkInlines :: Inlines () -> Gen Expectation
 checkInlines inlines = do
-    let doc  = Doc . pure . Paragraph @Text $ normalize inlines
+    let doc  = Doc . pure . Paragraph $ normalize inlines
         test = InlineTest { asDoc    = doc
                           , reparsed = parse [Normalize] (render doc)
                           , original = inlines
@@ -192,8 +293,8 @@ checkInlines inlines = do
                           }
     pure $ test `shouldSatisfy` (\x -> asDoc x == reparsed x)
 
-simpleInline :: Gen (Inline Text)
+simpleInline :: Gen (Inline ())
 simpleInline = Str <$> arbitrary @Text
 
-simpleInlines :: Gen (Inlines Text)
+simpleInlines :: Gen (Inlines ())
 simpleInlines = fmap pure simpleInline

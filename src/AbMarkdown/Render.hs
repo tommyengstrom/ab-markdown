@@ -8,21 +8,21 @@ import           Data.Text                      ( Text )
 import           Data.Sequence                  ( Seq )
 import           Data.Foldable
 
-render :: Doc Text -> Text
+render :: Doc id -> Text
 render (Doc bs) = T.strip $ renderBlocks bs
 
-renderBlocks :: Foldable f => f (Block Text) -> Text
+renderBlocks :: Foldable f => f (Block id) -> Text
 renderBlocks = foldMap ((<> "\n\n") . renderBlock)
 
-renderBlock :: Block Text -> Text
+renderBlock :: Block id -> Text
 renderBlock = \case
-    ThematicBreak               -> "---"
-    Heading   hl    is          -> renderHeadingLevel hl <> renderInlines is
-    CodeBlock mLang t           -> renderCodeBlock mLang t
-    Paragraph is                -> renderInlines is
-    Question qBlocks mAnsBlocks -> renderQuestion qBlocks mAnsBlocks
-    Quote bs                    -> renderQuote bs
-    List lt tight bs            -> renderList lt tight bs
+    ThematicBreak                   -> "---"
+    Heading   hl    is              -> renderHeadingLevel hl <> renderInlines is
+    CodeBlock mLang t               -> renderCodeBlock mLang t
+    Paragraph is                    -> renderInlines is
+    Question _id qBlocks mAnsBlocks -> renderQuestion qBlocks mAnsBlocks
+    Quote bs                        -> renderQuote bs
+    List lt tight bs                -> renderList lt tight bs
 
 renderHeadingLevel :: HeadingLevel -> Text
 renderHeadingLevel = \case
@@ -33,10 +33,10 @@ renderHeadingLevel = \case
     Heading5 -> "##### "
     Heading6 -> "###### "
 
-renderInlines :: Inlines Text -> Text
+renderInlines :: Inlines id -> Text
 renderInlines = foldMap renderInline
 
-renderInline :: Inline Text -> Text
+renderInline :: Inline id -> Text
 renderInline = \case
     Str    t             -> t
     Emph   is            -> "*" <> renderInlines is <> "* "
@@ -46,7 +46,7 @@ renderInline = \case
     Image is dest _title -> "![" <> renderInlines is <> "](" <> unLinkRef dest <> ")"
     SoftBreak            -> "\n"
     HardBreak            -> "\\\n"
-    Task status is       -> case status of
+    Task _id status is   -> case status of
         Todo -> "[ ] " <> renderInlines is
         Done -> "[x] " <> renderInlines is
 
@@ -60,7 +60,7 @@ renderCodeBlock ml t = mconcat ["```", lang, "\n", T.strip t, "\n```"]
         Just (Unknown l) -> l
         Nothing          -> ""
 
-renderQuestion :: Blocks Text -> Maybe (Blocks Text) -> Text
+renderQuestion :: Blocks id -> Maybe (Blocks id) -> Text
 renderQuestion qBlocks mAns = question <> answer
   where
     question = prefixLines "?? " $ renderBlocks qBlocks
@@ -70,14 +70,14 @@ renderQuestion qBlocks mAns = question <> answer
     prefixLines prefix = T.unlines . fmap (prefix <>) . T.lines . T.strip
 
 
-renderQuote :: Blocks Text -> Text
+renderQuote :: Blocks id -> Text
 renderQuote = T.unlines . fmap ("> " <>) . T.lines . renderBlocks
 
-renderList :: ListType -> Bool -> (Seq (Blocks Text)) -> Text
+renderList :: ListType -> Bool -> (Seq (Blocks id)) -> Text
 renderList lt _tight blocksSeq = T.intercalate "\n" . zipWith mkBlock [0 ..] $ toList
     blocksSeq
   where
-    mkBlock :: Int -> Blocks Text -> Text
+    mkBlock :: Int -> Blocks id -> Text
     mkBlock i bs = marker i <> " " <> T.strip (renderBlocks bs)
     marker :: Int -> Text
     marker i = case lt of

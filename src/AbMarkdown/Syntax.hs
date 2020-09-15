@@ -51,8 +51,11 @@ import           Control.Monad.State
 newtype Doc id = Doc (Blocks id)
   deriving stock ( Show, Read, Eq, Typeable, Data, Generic, Functor, Foldable, Traversable)
   deriving anyclass (ToJSON, FromJSON)
-instance (Eq id, Arbitrary id) => Arbitrary (Doc id) where
+instance Arbitrary (Doc ()) where
     arbitrary = genericArbitrary
+
+instance Arbitrary (Doc UUID) where
+    arbitrary = withUUID <$> arbitrary
 
 instance NFData id => NFData (Doc id)
 

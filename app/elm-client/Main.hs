@@ -12,11 +12,11 @@ import           Data.Proxy
 import           AbMarkdown.Syntax
 import           Data.Aeson
 import           Options.Generic
+import           Data.UUID
 import           Control.Monad
 import           System.FilePath
 import           Test.QuickCheck
 import qualified Data.List                                    as L
---import           Data.Traversable
 
 
 deriveElmDef defaultOptions ''Doc
@@ -67,16 +67,15 @@ mkElmTests = ((imports <> describe) <>) <$> tests
     tests :: IO String
     tests = do
         linkRefSamples <- replicateM 50 $ generate (resize 1 $ arbitrary @LinkRef)
-        docSamples     <- fmap (fmap withUUID . mconcat) $ do
+        docSamples     <- fmap mconcat $ do
             sequence -- start with some smaller tests
-                [ replicateM 100 $ generate (resize 0 $ arbitrary @(Doc ()))
-                , replicateM 100 $ generate (resize 1 $ arbitrary @(Doc ()))
-                , replicateM 100 $ generate (resize 3 $ arbitrary @(Doc ()))
-                , replicateM 100 $ generate (resize 6 $ arbitrary @(Doc ()))
-                , replicateM 100 $ generate (resize 10 $ arbitrary @(Doc ()))
-                , replicateM 100 $ generate (resize 20 $ arbitrary @(Doc ()))
+                [ replicateM 100 $ generate (resize 0 $ arbitrary @(Doc UUID))
+                , replicateM 100 $ generate (resize 1 $ arbitrary @(Doc UUID))
+                , replicateM 100 $ generate (resize 3 $ arbitrary @(Doc UUID))
+                , replicateM 100 $ generate (resize 6 $ arbitrary @(Doc UUID))
+                , replicateM 100 $ generate (resize 10 $ arbitrary @(Doc UUID))
+                , replicateM 100 $ generate (resize 20 $ arbitrary @(Doc UUID))
                 ]
-
         pure
             $  "\n        ["
             <> L.intercalate

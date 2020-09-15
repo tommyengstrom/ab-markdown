@@ -167,7 +167,6 @@ main = hspec $ do
                       <*> pure True -- arbitrary --
                       <*> fmap Seq.fromList
                                (listOf1 $ fmap (pure . Paragraph) simpleInlines)
-
     describe "withUUID" $ do
         let getIds :: Doc () -> [String]
             getIds = foldMap (pure . show) . withUUID

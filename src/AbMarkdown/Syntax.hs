@@ -20,6 +20,8 @@ module AbMarkdown.Syntax
     , withUUID
     , updateBlock
     , updateInline
+    , getBlock
+    , getInline
     )
 where
 
@@ -34,9 +36,11 @@ import           Data.Sequence                  ( Seq
                                                 , (<|)
                                                 )
 import           Data.String                    ( IsString(..) )
+import           Control.Applicative
 import           GHC.Generics                   ( Generic )
 import           Data.Text                      ( Text )
 import qualified Data.Text                                    as T
+import           Data.Maybe                     ( catMaybes )
 import           Test.QuickCheck         hiding ( Ordered )
 import qualified Data.List                                    as L
 import           Test.QuickCheck.Arbitrary.ADT
@@ -44,6 +48,7 @@ import           Data.Aeson
 import qualified Data.HashMap.Strict                          as HM
 import           Data.UUID                      ( UUID )
 import           System.Random
+import           Data.Foldable
 import           Control.Monad.State
 
 
@@ -98,6 +103,27 @@ withUUID doc = fst $ runState (traverse addUUID doc) (mkStdGen seed)
     linkRefseed :: LinkRef -> Int
     linkRefseed = T.length . unLinkRef
 
+getBlock :: UUID -> Doc UUID -> Maybe (Block UUID)
+getBlock key (Doc blocks) = go blocks
+  where
+    go :: Blocks UUID -> Maybe (Block UUID)
+    go bs = case viewl bs of
+        EmptyL                -> Nothing
+        ThematicBreak :< rest -> go rest
+        Heading   _ _ :< rest -> go rest
+        CodeBlock _ _ :< rest -> go rest
+        Paragraph _   :< rest -> go rest
+        Quote     bs' :< rest -> go bs' <|> go rest
+        List _ _ bs'  :< rest -> headMay (catMaybes . toList $ fmap go bs') <|> go rest
+        q@(Question key' bs' bs'') :< rest
+            | key' == key -> Just q
+            | otherwise   -> go bs' <|> maybe Nothing go bs'' <|> go rest
+
+headMay :: [a] -> Maybe a
+headMay = \case
+    a : _ -> Just a
+    []    -> Nothing
+
 updateBlock :: UUID -> (Block UUID -> Block UUID) -> Doc UUID -> Doc UUID
 updateBlock key f (Doc blocks) = Doc $ go blocks
   where
@@ -113,6 +139,36 @@ updateBlock key f (Doc blocks) = Doc $ go blocks
         q@(Question key' qBs mABs) :< rest
             | key' == key -> pure (f q) <> rest
             | otherwise   -> pure (Question key' (go qBs) (fmap go mABs)) <> rest
+
+
+getInline :: UUID -> Doc UUID -> Maybe (Inline UUID)
+getInline key (Doc blocks) = go blocks
+  where
+    go :: Blocks UUID -> Maybe (Inline UUID)
+    go bs = case viewl bs of
+        EmptyL                      -> Nothing
+        ThematicBreak       :< rest -> go rest
+        Heading   _ il      :< rest -> goIL il <|> go rest
+        CodeBlock _ _       :< rest -> go rest
+        Paragraph il        :< rest -> goIL il <|> go rest
+        Quote     bs'       :< rest -> go bs' <|> go rest
+        List _ _ bs' :< rest -> headMay (catMaybes . toList $ fmap go bs') <|> go rest
+        Question _ bs' bs'' :< rest -> go bs' <|> maybe Nothing go bs'' <|> go rest
+
+    goIL :: Inlines UUID -> Maybe (Inline UUID)
+    goIL inlines = case viewl inlines of
+        EmptyL               -> Nothing
+        Str    _     :< rest -> goIL rest
+        Code   _     :< rest -> goIL rest
+        Emph   il    :< rest -> goIL il <|> goIL rest
+        Strong il    :< rest -> goIL il <|> goIL rest
+        Link  il _ _ :< rest -> goIL il <|> goIL rest
+        Image il _ _ :< rest -> goIL il <|> goIL rest
+        SoftBreak    :< rest -> goIL rest
+        HardBreak    :< rest -> goIL rest
+        t@(Task key' _ il) :< rest | key' == key -> Just t
+                                   | otherwise   -> goIL il <|> goIL rest
+
 
 
 updateInline :: UUID -> (Inline UUID -> Inline UUID) -> Doc UUID -> Doc UUID

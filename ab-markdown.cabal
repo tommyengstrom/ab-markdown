@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d789254e82b5e8de2ed1c38dde6d372f56de04b42ea95131d3ca5feaef5638f3
+-- hash: 90655523529d638bf173830873c544018c8452f62b2335660868d9823aefaffb
 
 name:           ab-markdown
 version:        0.1.0
@@ -19,6 +19,7 @@ build-type:     Simple
 
 library
   exposed-modules:
+      AbMarkdown
       AbMarkdown.Parser
       AbMarkdown.Parser.Inline
       AbMarkdown.Parser.Inline.EmphLink
